@@ -383,7 +383,7 @@ wait(void)
 void
 scheduler(void)
 {
-  cprintf("scheduler starting");
+  cprintf("debug - scheduler starting\n");
   struct proc *p;
   struct kthread *t;
   struct cpu *c = mycpu();
@@ -396,7 +396,7 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    cprintf("scheduler befor loop")
+    cprintf("debug - scheduler befor loop\n");
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       int threadReady = 0;
       for (int i = 0; i < NTHREAD; i++){

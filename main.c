@@ -54,9 +54,9 @@ mpmain(void)
   cprintf("cpu%d: starting %d\n", cpuid(), cpuid());
   idtinit();       // load idt register
   xchg(&(mycpu()->started), 1); // tell startothers() we're up
-  cprintf("mpmain befor scheduler\n");
+  cprintf("debug - mpmain befor scheduler\n");
   scheduler();     // start running processes
-  cprintf("mpmain after scheduler\n");
+  cprintf("debug - mpmain after scheduler\n");
 }
 
 pde_t entrypgdir[];  // For entry.S
