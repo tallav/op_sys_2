@@ -408,18 +408,26 @@ scheduler(void)
       }
       if(!threadReady)
         continue;
-
+      cprintf("debug - scheduler after loop\n");
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+      if(t == 0)
+        cprintf("debug - scheduler t is null\n");
+      if(p == 0)
+        cprintf("debug - scheduler p is null\n");
       c->proc = p;
       c->thread = t;
       switchuvm(p);
+      cprintf("debug - scheduler after switchuvm\n");
       p->state = RUNNING;
       t->state = RUNNING;
 
+      if(t->context == 0)
+        cprintf("debug - schedulert context is null\n");
       swtch(&(c->scheduler), t->context);
       switchkvm();
+      cprintf("debug - scheduler after switch kvm\n");
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
