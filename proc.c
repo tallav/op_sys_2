@@ -403,8 +403,11 @@ scheduler(void)
         t = &p->threads[i];
         if(t->state != RUNNABLE)
           continue;
-        else
+        else{
+          cprintf("debug - scheduler found thread\n");
           threadReady = 1;
+          break;
+        }
       }
       if(!threadReady)
         continue;
