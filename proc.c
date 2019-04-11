@@ -401,6 +401,8 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p == 0)
+        cprintf("debug - scheduler  is null\n");
       int threadReady = 0;
       for (t = p->threads; t < &p->threads[NTHREAD]; t++){
         if(t == 0)
