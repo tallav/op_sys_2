@@ -113,6 +113,7 @@ found:
   p->pid = nextpid++;
   p->threads = ptable.ttable[i].threads;
   t = p->threads; // First thread in the table will be the main process thread
+  t->tproc = p;
   t->tid = nexttid++;
 
   release(&ptable.lock);
