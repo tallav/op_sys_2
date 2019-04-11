@@ -133,6 +133,11 @@ found:
   }
   sp = t->kstack + KSTACKSIZE;
 
+  //init threads status;
+  for (i = 0; i < NTHREAD; i++){
+    p->threads[i].state = UNUSED;
+  }
+
   // Leave room for trap frame.
   sp -= sizeof *t->tf;
   t->tf = (struct trapframe*)sp;
