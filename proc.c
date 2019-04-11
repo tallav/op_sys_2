@@ -386,6 +386,7 @@ scheduler(void)
   struct kthread *t;
   struct cpu *c = mycpu();
   c->proc = 0;
+  t->thread = 0;
   
   for(;;){
     // Enable interrupts on this processor.

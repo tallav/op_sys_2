@@ -6,6 +6,7 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
+#include "kthread.h"
 
 int
 exec(char *path, char **argv)
@@ -18,6 +19,7 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
+  struct kthread *curthread = mythread();
 
   begin_op();
 
@@ -97,8 +99,8 @@ exec(char *path, char **argv)
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;
   curproc->sz = sz;
-  curproc->tf->eip = elf.entry;  // main
-  curproc->tf->esp = sp;
+  curthread->tf->eip = elf.entry;  // main
+  curthread->tf->esp = sp;
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;
