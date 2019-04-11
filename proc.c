@@ -112,7 +112,7 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->threads = ptable.ttable[i].threads;
-  t = &p->threads[0]; // First thread in the table will be the main process thread
+  t = p->threads; // First thread in the table will be the main process thread
   t->tid = nexttid++;
 
   release(&ptable.lock);
@@ -166,7 +166,7 @@ userinit(void)
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   p->sz = PGSIZE;
 
-  t = &p->threads[0];
+  t = p->threads;
   memset(t->tf, 0, sizeof(*t->tf));
   t->tf->cs = (SEG_UCODE << 3) | DPL_USER;
   t->tf->ds = (SEG_UDATA << 3) | DPL_USER;
@@ -237,12 +237,12 @@ fork(void)
   }
   np->sz = curproc->sz;
   np->parent = curproc;
-  *np->threads[0]->tf = *curthread->tf;
-  np->threads[0].tproc = np;
-  np->threads[0].kstack = curthread->kstack;
+  *np->threads->tf = *curthread->tf;
+  np->threads->tproc = np;
+  np->threads->kstack = curthread->kstack;
 
   // Clear %eax so that fork returns 0 in the child.
-  np->threads[0]->tf->eax = 0;
+  np->threads->tf->eax = 0;
 
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
@@ -256,7 +256,7 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
-  np->threads[0]->state = RUNNABLE;
+  np->threads->state = RUNNABLE;
 
   release(&ptable.lock);
 
@@ -273,7 +273,6 @@ exit(void)
   struct proc *p;
   int fd;
   int index, j = 0;
-  struct kthread *t;
 
   if(curproc == initproc)
     panic("init exiting");
@@ -311,13 +310,14 @@ exit(void)
 
   // Kill the process threads
   struct threadTable procThreads = ptable.ttable[index];
+  struct kthread *t;
   for(j = 0; j < NTHREAD; j++){
-    struct kthread currThread = procThreads[j];
-    kfree(currThread->kstack);
-    currThread->kstack = 0;
-    currThread->tid = 0;
-    currThread->tproc = 0;
-    currThread->state = ZOMBIE;
+    t = &procThreads[j];
+    kfree(t->kstack);
+    t->kstack = 0;
+    t->tid = 0;
+    t->tproc = 0;
+    t->state = ZOMBIE;
   }
 
   // Jump into the scheduler, never to return.
@@ -386,7 +386,7 @@ scheduler(void)
   struct kthread *t;
   struct cpu *c = mycpu();
   c->proc = 0;
-  t->thread = 0;
+  c->thread = 0;
   
   for(;;){
     // Enable interrupts on this processor.
@@ -397,7 +397,7 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       int threadReady = 0;
       for (int i = 0; i < NTHREAD; i++){
-        t = p->threads[i];
+        t = &p->threads[i];
         if(t->state != RUNNABLE)
           continue;
         else
@@ -536,9 +536,10 @@ wakeup1(void *chan)
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     for(j = 0; j < NTHREAD; j++){
-      t = p->threads[j];
+      t = &p->threads[j];
       if(t->state == SLEEPING && t->chan == chan)
         t->state = RUNNABLE;
+    }
   }
 }
 

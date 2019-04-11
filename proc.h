@@ -1,4 +1,4 @@
-#define NTHREADS 16
+#define NTHREAD 16
 
 // Per-CPU state
 struct cpu {
