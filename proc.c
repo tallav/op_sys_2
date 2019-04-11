@@ -312,7 +312,7 @@ exit(void)
   struct threadTable procThreads = ptable.ttable[index];
   struct kthread *t;
   for(j = 0; j < NTHREAD; j++){
-    t = &procThreads[j];
+    t = &procThreads.threads[j];
     kfree(t->kstack);
     t->kstack = 0;
     t->tid = 0;
@@ -604,7 +604,7 @@ procdump(void)
       state = "???";
     cprintf("%d %s %s", p->pid, state, p->name);
     if(p->state == SLEEPING){
-      getcallerpcs((uint*)p->context->ebp+2, pc);
+      //getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
         cprintf(" %p", pc[i]);
     }
