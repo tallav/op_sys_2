@@ -401,6 +401,8 @@ scheduler(void)
       int threadReady = 0;
       for (int i = 0; i < NTHREAD; i++){
         t = &p->threads[i];
+        if(t == 0)
+          cprintf("debug - scheduler for t is null\n");
         if(t->state != RUNNABLE)
           continue;
         else{
