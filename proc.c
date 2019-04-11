@@ -243,12 +243,12 @@ fork(void)
   }
   np->sz = curproc->sz;
   np->parent = curproc;
-  *np->threads->tf = *curthread->tf;
-  np->threads->tproc = np;
-  np->threads->kstack = curthread->kstack;
+  *np->threads[0].tf = *curthread->tf;
+  np->threads[0].tproc = np;
+  np->threads[0].kstack = curthread->kstack;
 
   // Clear %eax so that fork returns 0 in the child.
-  np->threads->tf->eax = 0;
+  np->threads[0].tf->eax = 0;
 
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
@@ -262,7 +262,7 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
-  np->threads->state = RUNNABLE;
+  np->threads[0].state = RUNNABLE;
 
   release(&ptable.lock);
 
@@ -402,8 +402,10 @@ scheduler(void)
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p == 0)
-        cprintf("debug - scheduler  is null\n");
+        cprintf("debug - scheduler p is null\n");
       int threadReady = 0;
+      if(p->threads == 0)
+        cprintf("debug - scheduler p->threads is null\n");
       for (t = p->threads; t < &p->threads[NTHREAD]; t++){
         if(t == 0)
           cprintf("debug - scheduler t is null\n");
