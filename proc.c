@@ -112,6 +112,9 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->threads = ptable.ttable[i].threads;
+  if(!p->threads){
+    panic("debug - no threads wtf helppp\n");
+  }
   t = p->threads; // First thread in the table will be the main process thread
   t->tproc = p;
   t->tid = nexttid++;
@@ -405,8 +408,6 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       int threadReady = 0;
       for (int i = 0; i < NTHREAD; i++){
-        if(p->threads[i] == 0)
-          cprintf("debug - scheduler p->threads[i] is null\n");
         if(&p->threads[i] == 0)
           cprintf("debug - scheduler &p->threads[i] is null\n");
         t = &p->threads[i];
