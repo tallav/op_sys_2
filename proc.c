@@ -112,9 +112,6 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->threads = ptable.ttable[i].threads;
-  if(!p->threads){
-    panic("debug - no threads wtf helppp\n");
-  }
   t = p->threads; // First thread in the table will be the main process thread
   t->tproc = p;
   t->tid = nexttid++;
@@ -391,7 +388,6 @@ wait(void)
 void
 scheduler(void)
 {
-  cprintf("debug - scheduler starting\n");
   struct proc *p;
   struct kthread *t;
   struct cpu *c = mycpu();
@@ -404,7 +400,6 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    cprintf("debug - scheduler befor loop\n");
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       int threadReady = 0;
       for (int i = 0; i < NTHREAD; i++){
@@ -414,33 +409,24 @@ scheduler(void)
         if(t->state != RUNNABLE)
           continue;
         else{
-          cprintf("debug - scheduler found thread\n");
           threadReady = 1;
           break;
         }
       }
       if(!threadReady)
         continue;
-      cprintf("debug - scheduler after loop\n");
+      
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      if(t == 0)
-        cprintf("debug - scheduler t is null\n");
-      if(p == 0)
-        cprintf("debug - scheduler p is null\n");
       c->proc = p;
       c->thread = t;
       switchuvm(p);
-      cprintf("debug - scheduler after switchuvm\n");
       p->state = RUNNING;
       t->state = RUNNING;
 
-      if(t->context == 0)
-        cprintf("debug - schedulert context is null\n");
       swtch(&(c->scheduler), t->context);
       switchkvm();
-      cprintf("debug - scheduler after switch kvm\n");
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
