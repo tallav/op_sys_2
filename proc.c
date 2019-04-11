@@ -400,9 +400,9 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       int threadReady = 0;
       for (int i = 0; i < NTHREAD; i++){
-        t = &p->threads[i];
-        if(t == 0)
+        if(&p->threads[i]t == 0)
           cprintf("debug - scheduler for t is null\n");
+        t = &p->threads[i];
         if(t->state != RUNNABLE)
           continue;
         else{
