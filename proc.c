@@ -113,6 +113,8 @@ found:
   p->pid = nextpid++;
   p->threads = ptable.ttable[i].threads;
   t = p->threads; // First thread in the table will be the main process thread
+  if(t == 0)
+    cprintf("debug - allocproc t is null\n");
   t->tproc = p;
   t->tid = nexttid++;
 
