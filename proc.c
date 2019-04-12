@@ -118,20 +118,12 @@ found:
 
   release(&ptable.lock);
 
-  // TODO: check if kstack is needed for process
   // Allocate kernel stack for the process.
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
     return 0;
   }
   sp = p->kstack + KSTACKSIZE;
-
-  // Allocate kernel stack for the thread.
-  if((t->kstack = kalloc()) == 0){
-    t->state = UNUSED;
-    return 0;
-  }
-  sp = t->kstack + KSTACKSIZE;
 
   //init threads status;
   for (i = 0; i < NTHREAD; i++){
@@ -151,6 +143,7 @@ found:
   t->context = (struct context*)sp;
   memset(t->context, 0, sizeof *t->context);
   t->context->eip = (uint)forkret;
+  t->kstack = p->kstack;
 
   return p;
 }
@@ -171,7 +164,6 @@ userinit(void)
     panic("userinit: out of memory?");
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
   p->sz = PGSIZE;
-
   t = p->threads;
   memset(t->tf, 0, sizeof(*t->tf));
   t->tf->cs = (SEG_UCODE << 3) | DPL_USER;
@@ -278,7 +270,6 @@ exit(void)
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
-  int index = 0, j = 0;
 
   if(curproc == initproc)
     panic("init exiting");
@@ -308,19 +299,13 @@ exit(void)
       if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
-    if(p == curproc)
-      index = j;
-    else
-      j++;
   }
 
   // Kill the process threads
-  struct threadTable procThreads = ptable.ttable[index];
   struct kthread *t;
-  for(j = 0; j < NTHREAD; j++){
-    t = &procThreads.threads[j];
-    kfree(t->kstack);
-    t->kstack = 0;
+  for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
+    //kfree(t->kstack);
+    //t->kstack = 0;
     t->tid = 0;
     t->tproc = 0;
     t->state = ZOMBIE;
@@ -393,38 +378,35 @@ scheduler(void)
   struct cpu *c = mycpu();
   c->proc = 0;
   c->thread = 0;
-  
   for(;;){
     // Enable interrupts on this processor.
     sti();
-
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+      if(p->state == UNUSED){
         continue;
-      else{
-        for (t = p->threads; t < &p->threads[NTHREAD]; t++){
-          if(t->state != RUNNABLE)
+      }
+      for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+        if(t->state != RUNNABLE){
             continue;
-        
-          // Switch to chosen process.  It is the process's job
-          // to release ptable.lock and then reacquire it
-          // before jumping back to us.
-          c->proc = p;
-          c->thread = t;
-          switchuvm(p);
-          p->state = RUNNING;
-          t->state = RUNNING;
-
-          swtch(&(c->scheduler), t->context);
-          switchkvm();
-
-          // Process is done running for now.
-          // It should have changed its p->state before coming back.
-          c->proc = 0;
-          c->thread = 0;
         }
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        c->proc = p;
+        c->thread = t;
+        switchuvm(p);
+        p->state = RUNNING;
+        t->state = RUNNING;
+
+        swtch(&(c->scheduler), t->context);
+        switchkvm();
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0;
+        c->thread = 0;
       }
     }
     release(&ptable.lock);
@@ -462,6 +444,7 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
+  myproc()->state = RUNNABLE;
   mythread()->state = RUNNABLE;
   sched();
   release(&ptable.lock);
@@ -535,13 +518,16 @@ wakeup1(void *chan)
 {
   struct proc *p;
   struct kthread *t;
-  int j;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    for(j = 0; j < NTHREAD; j++){
-      t = &p->threads[j];
-      if(t->state == SLEEPING && t->chan == chan)
+    if(p->state == UNUSED){
+      continue;
+    }
+    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+      if(t->state == SLEEPING && t->chan == chan){
+        p->state = RUNNABLE;  
         t->state = RUNNABLE;
+      }
     }
   }
 }
