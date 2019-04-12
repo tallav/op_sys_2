@@ -113,8 +113,6 @@ found:
   p->pid = nextpid++;
   p->threads = ptable.ttable[i].threads;
   t = p->threads; // First thread in the table will be the main process thread
-  if(t == 0)
-    cprintf("debug - allocproc t is null\n");
   t->tproc = p;
   t->tid = nexttid++;
 
@@ -404,41 +402,32 @@ scheduler(void)
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
-          continue;
-      int threadReady = 0;
-      for (t = p->threads; t < &p->threads[NTHREAD]; t++){
-        if(t == 0)
-          cprintf("debug - scheduler t is null\n");
-        //t = &p->threads[i];
-        if(t->state != RUNNABLE)
-          continue;
-        else{
-          threadReady = 1;
-          break;
+        continue;
+      else{
+        for (t = p->threads; t < &p->threads[NTHREAD]; t++){
+          if(t->state != RUNNABLE)
+            continue;
+        
+          // Switch to chosen process.  It is the process's job
+          // to release ptable.lock and then reacquire it
+          // before jumping back to us.
+          c->proc = p;
+          c->thread = t;
+          switchuvm(p);
+          p->state = RUNNING;
+          t->state = RUNNING;
+
+          swtch(&(c->scheduler), t->context);
+          switchkvm();
+
+          // Process is done running for now.
+          // It should have changed its p->state before coming back.
+          c->proc = 0;
+          c->thread = 0;
         }
       }
-      if(!threadReady)
-        continue;
-      
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      c->thread = t;
-      switchuvm(p);
-      p->state = RUNNING;
-      t->state = RUNNING;
-
-      swtch(&(c->scheduler), t->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-      c->thread = 0;
     }
     release(&ptable.lock);
-
   }
 }
 
