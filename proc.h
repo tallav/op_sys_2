@@ -35,17 +35,18 @@ struct context {
   uint eip;
 };
 
-enum state { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
+enum procstate { UNUSED, EMBRYO, USED, ZOMBIE };
+enum threadstate { UNINIT, SLEEPING, RUNNABLE, RUNNING, BLOCKED, TERMINATED };
 
 struct kthread {
   char *kstack;                // Bottom of kernel stack for this process
-  enum state state;            // Thread state
+  enum threadstate state;            // Thread state
   int tid;                     // Thread id
   struct proc *tproc;          // Process that owns the thread
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
   void *chan;                  // If non-zero, sleeping on chan
-
+  int exitRequest;
 };
 
 // Per-process state
@@ -53,7 +54,7 @@ struct proc {
   uint sz;                     // Size of process memory (bytes)
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
-  enum state state;        // Process state
+  enum procstate state;        // Process state
   int pid;                     // Process ID
   struct proc *parent;         // Parent process
   //struct trapframe *tf;        // Trap frame for current syscall
