@@ -40,6 +40,7 @@ enum threadstate { UNINIT, SLEEPING, RUNNABLE, RUNNING, BLOCKED, TERMINATED };
 
 struct kthread {
   char *kstack;                // Bottom of kernel stack for this process
+  char *ustack;                // Bottom of user stack for this process
   enum threadstate state;      // Thread state
   int tid;                     // Thread id
   struct proc *tproc;          // Process that owns the thread

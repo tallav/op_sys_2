@@ -10,19 +10,32 @@
 
 extern void trapret(void);
 
+struct threadTable{
+  struct kthread threads[NTHREAD]; // Thread table for every process
+};
+
+struct ptable{
+  struct spinlock lock;
+  struct proc proc[NPROC];
+  struct threadTable ttable[NPROC]; // Table of all threads
+};
+
+extern struct ptable ptable;
 
 int kthread_create(void (*start_func)(), void* stack){
     struct proc *p;
-    struct kthread *t;
+    struct kthread *t = 0;
     struct cpu *c = mycpu();
     char *sp;
 
     p = c->proc;
 
-    //acquire(&ptable.lock);
+    acquire(&ptable.lock);
     int tid = 1;
-    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
-        if(t->state == UNINIT){
+    struct kthread *tempT;
+    for(tempT = p->threads; tempT < &p->threads[NTHREAD]; tempT++){
+        if(tempT->state == UNINIT){
+            t = tempT;
             break;
         }
         else{
@@ -42,7 +55,7 @@ int kthread_create(void (*start_func)(), void* stack){
     // Leave room for trap frame.
     sp -= sizeof *t->tf;
     t->tf = (struct trapframe*)sp;
-
+    t->ustack = stack;
     t->state = RUNNABLE;
     t->tid = tid;
     t->tproc = p;
@@ -58,11 +71,19 @@ int kthread_create(void (*start_func)(), void* stack){
     t->context->eip = (uint)start_func;
   //  t->chan = 
     t->exitRequest = 0;
+    release(&ptable.lock);
     return t->tid;
 }
 
 int kthread_id(){
-    return 0;
+    struct kthread *t;
+    struct cpu *c = mycpu();
+    t = c->thread;
+
+    if (t == 0)
+        return -1;
+
+    return t->tid;
 }
 
 void kthread_exit(){
@@ -70,5 +91,30 @@ void kthread_exit(){
 }
 
 int kthread_join(int thread_id){
+    struct proc *p;
+    struct kthread *t = 0;
+    struct cpu *c = mycpu();
+    int threadTerminated = 0;
+    p = c->proc;
+    
+    struct kthread *tempT;
+    for(tempT = p->threads; tempT < &p->threads[NTHREAD]; tempT++){
+        if (tempT->tid == thread_id){
+            t = tempT;
+            if (tempT->state == TERMINATED){
+                threadTerminated = 1;
+            }
+            break;
+        }
+    }
+
+    if (t == 0)
+        return -1;
+
+    while (!threadTerminated){
+          if (t->state == TERMINATED){
+                threadTerminated = 1;
+            }
+    }
     return 0;
 }

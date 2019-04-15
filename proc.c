@@ -11,12 +11,14 @@ struct threadTable{
   struct kthread threads[NTHREAD]; // Thread table for every process
 };
 
-struct {
+struct ptable {
   struct spinlock lock;
   struct proc proc[NPROC];
   struct threadTable ttable[NPROC]; // Table of all threads
-} ptable;
+};
 
+
+struct ptable ptable;
 static struct proc *initproc;
 
 int nextpid = 1;
