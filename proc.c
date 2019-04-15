@@ -606,15 +606,20 @@ void
 procdump(void)
 {
   static char *states[] = {
-  [UNUSED]    "unused",
-  [EMBRYO]    "embryo",
-  [SLEEPING]  "sleep ",
-  [RUNNABLE]  "runble",
-  [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"
+  [UNUSED]     "unused",
+  [EMBRYO]     "embryo",
+  [USED]       "used  ",
+  [ZOMBIE]     "zombie",
+  [UNINIT]     "uninit",
+  [SLEEPING]   "sleep ",
+  [RUNNABLE]   "runble",
+  [RUNNING]    "run   ",
+  [BLOCKED]    "block ",
+  [TERMINATED] "termnt"
   };
   int i;
   struct proc *p;
+  struct kthread *t;
   char *state;
   uint pc[10];
 
@@ -625,11 +630,22 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
-    /*if(p->state == SLEEPING){
-      getcallerpcs((uint*)p->context->ebp+2, pc);*/
-      for(i=0; i<10 && pc[i] != 0; i++)
-        cprintf(" %p", pc[i]);
+    cprintf("%d %s %s || ", p->pid, state, p->name);
+    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+      if(t->state == UNINIT)
+        continue;
+      if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+        state = states[p->state];
+      else
+        state = "???";
+      cprintf("%d %s || ", t->tid, state);
+      if(t->state == SLEEPING){
+        getcallerpcs((uint*)t->context->ebp+2, pc);
+        for(i=0; i<10 && pc[i] != 0; i++){
+          cprintf(" %p * ", pc[i]);
+        }
+      }
     }
+  }
   cprintf("\n");
 }

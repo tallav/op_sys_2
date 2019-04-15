@@ -8,8 +8,18 @@
 #include "spinlock.h"
 #include "kthread.h"
 
-extern void trapret(void);
+struct threadTable{
+  struct kthread threads[NTHREAD]; // Thread table for every process
+};
 
+struct ptable{
+  struct spinlock lock;
+  struct proc proc[NPROC];
+  struct threadTable ttable[NPROC]; // Table of all threads
+};
+
+extern struct ptable ptable;
+extern void trapret(void);
 
 int kthread_create(void (*start_func)(), void* stack){
     struct proc *p;
@@ -62,11 +72,37 @@ int kthread_create(void (*start_func)(), void* stack){
 }
 
 int kthread_id(){
-    return 0;
+    procdump();
+    return mythread()->tid;
 }
 
 void kthread_exit(){
+    struct kthread *curthread = mythread();
+    struct proc *threadProc;
+    struct kthread *t;
 
+    acquire(&ptable.lock);
+    threadProc = curthread->tproc;
+    for(t = threadProc->threads; t < &threadProc->threads[NTHREAD]; t++){
+        if(t->tproc == threadProc){ // threads of the same process 
+            t->exitRequest = 1;
+        }
+    }
+    // check if it is the last running thread. if it is, the process execute exit();
+    int lastRunning = 1;
+    for(t = threadProc->threads; t < &threadProc->threads[NTHREAD]; t++){
+        if(t != curthread && t->state != TERMINATED){
+            lastRunning = 0;
+        }
+    }
+    if(lastRunning){
+        exit();
+    }
+    // Jump into the scheduler, never to return.
+    curthread->state = TERMINATED;
+    procdump();
+    sched();
+    panic("terminated exit");
 }
 
 int kthread_join(int thread_id){
