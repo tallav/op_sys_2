@@ -89,3 +89,17 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_kthread_exit(void)
+{
+  exit();
+  return 0;  // not reached
+}
+
+int
+sys_kthread_join(void)
+{
+  join();
+  return 0;  // not reached
+}
