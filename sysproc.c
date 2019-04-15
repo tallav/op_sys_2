@@ -98,6 +98,7 @@ sys_kthread_exit(void)
   return 0;  // not reached
 }
 
+int
 sys_kthread_create(void)
 {
   void* start_func;
@@ -117,7 +118,7 @@ sys_kthread_id(void)
 int
 sys_kthread_join(void)
 {
-  join();
+  /*join();*/
   return 0;  // not reached
 }
 

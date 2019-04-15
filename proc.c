@@ -365,7 +365,7 @@ wait(void)
         if(!hasNonTerminated){
           // Found one.
           pid = p->pid;
-          //kfree(p->kstack);
+          kfree(p->kstack);
           p->kstack = 0;
           freevm(p->pgdir);
           p->pid = 0;
