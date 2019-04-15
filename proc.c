@@ -202,8 +202,8 @@ growproc(int n)
   sz = curproc->sz;
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0){
-       release(&ptable.lock);
-       return -1;
+      release(&ptable.lock);
+      return -1;
     }
   } else if(n < 0){
     if((sz = deallocuvm(curproc->pgdir, sz, sz + n)) == 0){
@@ -424,9 +424,6 @@ scheduler(void)
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
-
-        if(p != t->tproc)
-          cprintf("proc not thread\n");
         c->proc = p;
         c->thread = t;
         switchuvm(p);

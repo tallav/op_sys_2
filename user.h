@@ -25,6 +25,8 @@ int sleep(int);
 int uptime(void);
 void kthread_exit(void);
 int kthread_join(int);
+int kthread_create(void*, void*);
+int kthread_id(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

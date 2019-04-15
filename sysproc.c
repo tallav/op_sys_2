@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "kthread.h"
 
 int
 sys_fork(void)
@@ -97,9 +98,26 @@ sys_kthread_exit(void)
   return 0;  // not reached
 }
 
+sys_kthread_create(void)
+{
+  void* start_func;
+  void* stack;
+
+  if ((argptr(0, (char**)(&start_func), sizeof(int)) < 0) || (argptr(1, (char**)(&stack), sizeof(int)) < 0))
+    return -1;
+return kthread_create(start_func,stack);
+}
+
+int
+sys_kthread_id(void)
+{
+  return kthread_id();
+}
+
 int
 sys_kthread_join(void)
 {
   join();
   return 0;  // not reached
 }
+
