@@ -124,7 +124,11 @@ found:
     p->state = UNUSED;
     return 0;
   }
-  sp = p->kstack + KSTACKSIZE;
+  // Allocate kernel stack for the thread.
+  if((t->kstack = kalloc()) == 0){
+    return 0;
+  }
+  sp = t->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.
   sp -= sizeof *t->tf;
@@ -139,7 +143,6 @@ found:
   t->context = (struct context*)sp;
   memset(t->context, 0, sizeof *t->context);
   t->context->eip = (uint)forkret;
-  t->kstack = p->kstack;
 
   return p;
 }
@@ -345,14 +348,14 @@ wait(void)
         int hasNonTerminated = 0;
         for(t = p->threads; t < &p->threads[NTHREAD]; t++){
           if(t->state == TERMINATED){
-            if(t->kstack)
-              kfree(t->kstack);
+            kfree(t->kstack);
             t->kstack = 0;
             t->tid = 0;
             t->tproc = 0;
             // TODO: check what to do with tf and context
           }else{
-            hasNonTerminated = 1;
+            if(t->state != UNINIT)
+              hasNonTerminated = 1;
           }
         }
         if(!hasNonTerminated){
