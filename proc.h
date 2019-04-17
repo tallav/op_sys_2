@@ -36,20 +36,6 @@ struct context {
 };
 
 enum procstate { UNUSED, EMBRYO, USED, ZOMBIE };
-enum threadstate { UNINIT, SLEEPING, RUNNABLE, RUNNING, BLOCKED, TERMINATED };
-
-struct kthread {
-  char *kstack;                // Bottom of kernel stack for this process
-  char *ustack;                // Bottom of user stack for this process
-  enum threadstate state;      // Thread state
-  int tid;                     // Thread id
-  struct proc *tproc;          // Process that owns the thread
-  struct trapframe *tf;        // Trap frame for current syscall
-  struct context *context;     // swtch() here to run process
-  void *chan;                  // If non-zero, sleeping on chan
-  int exitRequest;             // If one of the process threads executed exit this value will be 1
-  struct inode *cwd;           // Current directory
-};
 
 // Per-process state
 struct proc {
@@ -74,3 +60,19 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+
+enum threadstate { UNINIT, SLEEPING, RUNNABLE, RUNNING, BLOCKED, TERMINATED };
+
+struct kthread {
+  char *kstack;                // Bottom of kernel stack for this process
+  char *ustack;                // Bottom of user stack for this process
+  enum threadstate state;      // Thread state
+  int tid;                     // Thread id
+  struct proc *tproc;          // Process that owns the thread
+  struct trapframe *tf;        // Trap frame for current syscall
+  struct context *context;     // swtch() here to run process
+  void *chan;                  // If non-zero, sleeping on chan
+  int exitRequest;             // If one of the process threads executed exit this value will be 1
+  struct inode *cwd;           // Current directory
+};

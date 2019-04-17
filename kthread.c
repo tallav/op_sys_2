@@ -8,6 +8,11 @@
 #include "spinlock.h"
 #include "kthread.h"
 
+
+
+void printSomething();
+extern void forkret(void);
+
 struct threadTable{
   struct kthread threads[NTHREAD]; // Thread table for every process
 };
@@ -24,10 +29,11 @@ extern void trapret(void);
 int kthread_create(void (*start_func)(), void* stack){
     struct proc *p;
     struct kthread *t = 0;
-    struct cpu *c = mycpu();
     char *sp;
 
-    p = c->proc;
+    p = myproc();
+
+    cprintf("kthread_create\n");
 
     acquire(&ptable.lock);
     int tid = 1;
@@ -41,9 +47,13 @@ int kthread_create(void (*start_func)(), void* stack){
             tid++;
         }
     }
+    t->tid = tid;
+    release(&ptable.lock);
 
     if (t == 0)
         return -1;
+
+    t->tproc = p;    
 
     // Allocate kernel stack for the thread.
     if((t->kstack = kalloc()) == 0){
@@ -54,11 +64,9 @@ int kthread_create(void (*start_func)(), void* stack){
     // Leave room for trap frame.
     sp -= sizeof *t->tf;
     t->tf = (struct trapframe*)sp;
-    t->ustack = stack;
-    t->state = RUNNABLE;
-    t->tid = tid;
-    t->tproc = p;
-    
+   
+  
+        
     // Set up new context to start executing at forkret,
     // which returns to trapret.
     sp -= 4;
@@ -66,13 +74,48 @@ int kthread_create(void (*start_func)(), void* stack){
 
     sp -= sizeof *t->context;
     t->context = (struct context*)sp;
-    memset(t->context, 0, sizeof *t->context);
-    t->context->eip = (uint)start_func;
-  //  t->chan = 
+    memset(t->context, 0, sizeof *t->context); //todo: 0 or tid?
+
+    //cprintf("func address: %d\n",(uint) t->tf->eip);
+    t->context->eip = (uint)forkret;
+    
+    struct kthread* thread = mythread();
+    *t->tf=*thread->tf;
+    t->tf->eip=(uint)start_func;
+    t->tf->esp=(uint) (stack+KSTACKSIZE);
+
+ 
     t->exitRequest = 0;
-    release(&ptable.lock);
+    t->state=RUNNABLE;
+    t->ustack = stack;
+
+
+    cprintf("finished func %d\n",(uint)start_func);
+
+
     return t->tid;
 }
+
+/*kthread getThread(int tid){
+    struct proc *p;
+    struct kthread *t = 0;
+    struct cpu *c = mycpu();
+    char *sp;
+
+    p = c->proc;
+
+    acquire(&ptable.lock);
+    int tid = 1;
+    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+        if(t->tid == tid){
+            return t;
+        }
+    }
+
+    if (t == 0)
+        return -1;
+}*/
+
 
 int kthread_id(){
     procdump();
@@ -109,11 +152,50 @@ void kthread_exit(){
 }
 
 int kthread_join(int thread_id){
-    struct proc *p;
+    /*struct thread* t;
+	int exists=0;
+	struct proc *threadProc = myproc();
+	acquire(&ptable.lock);
+	
+      for(t = threadProc->threads; t < &threadProc->threads[NTHREAD]; t++){
+        if(t->tid ==thread_id){
+            exists=1;
+			break;
+        }
+    }
+	
+	if(!exists){
+		release(&ptable.lock);
+		return -1;
+	}
+	if(t->state==UNINIT){
+  	release(&ptable.lock);
+  	return 0;
+  }
+	else if(t->state == TERMINATED){
+		free_and_return:
+    kfree(t->kstack);
+    t->kstack = 0;
+    t->state = UNUSED;
+    release(&ptable.lock);
+    return 0;
+  }
+  else{
+  	while(t->state!=TERMINATED){
+  		sleep(t,&ptable.lock);
+  		}
+  	if(t->state==UNINIT)
+  		panic("kthread_join: won't wake up because thread was going from ready to unused");
+  	goto free_and_return;
+  }
+   
+ */
+
+return 0;
+   /* struct proc *p;
     struct kthread *t = 0;
-    struct cpu *c = mycpu();
     int threadTerminated = 0;
-    p = c->proc;
+    p = myproc();
     
     struct kthread *tempT;
     for(tempT = p->threads; tempT < &p->threads[NTHREAD]; tempT++){
@@ -134,5 +216,5 @@ int kthread_join(int thread_id){
                 threadTerminated = 1;
             }
     }
-    return 0;
+    return 0;*/
 }
