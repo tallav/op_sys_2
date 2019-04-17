@@ -7,6 +7,7 @@
 #include "x86.h"
 #include "traps.h"
 #include "spinlock.h"
+#include "kthread.h"
 
 // Interrupt descriptor table (shared by all CPUs).
 struct gatedesc idt[256];
@@ -39,10 +40,14 @@ trap(struct trapframe *tf)
   if(tf->trapno == T_SYSCALL){
     if(myproc()->killed)
       exit();
+    if(mythread()->exitRequest)
+      kthread_exit();
     mythread()->tf = tf;
     syscall();
     if(myproc()->killed)
       exit();
+    if(mythread()->exitRequest)
+      kthread_exit();
     return;
   }
 
@@ -92,11 +97,18 @@ trap(struct trapframe *tf)
             myproc()->pid, myproc()->name, tf->trapno,
             tf->err, cpuid(), tf->eip, rcr2());
     myproc()->killed = 1;
+    struct kthread* t;
+    for(t = myproc()->threads ; t < &myproc()->threads[NTHREAD] ; t++){
+      if(t->state == SLEEPING)
+        t->state = RUNNABLE;
+    }
   }
 
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running
   // until it gets to the regular system call return.)
+  if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
+    exit();
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
     exit();
 

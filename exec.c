@@ -7,6 +7,18 @@
 #include "x86.h"
 #include "elf.h"
 #include "kthread.h"
+#include "spinlock.h"
+
+struct threadTable{
+  struct kthread threads[NTHREAD]; // Thread table for every process
+};
+
+struct ptable{
+  struct spinlock lock;
+  struct proc proc[NPROC];
+  struct threadTable ttable[NPROC]; // Table of all threads
+};
+extern struct ptable ptable;
 
 int
 exec(char *path, char **argv)
@@ -20,6 +32,33 @@ exec(char *path, char **argv)
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
   struct kthread *curthread = mythread();
+
+  // check if you got exit request before executing
+  if(curthread->exitRequest == 1){
+    cprintf("exec: thread got exit request\n");
+    kthread_exit();
+    return -1;
+  }
+
+  acquire(&ptable.lock);
+  struct kthread *t;
+  int allTerminated = 0;
+  // wait until the other threads in the process are terminated before executing
+  while(!allTerminated){
+    int hasNonTerminated = 0;
+    for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
+      //cprintf("exec: thread %d state %d\n", t->tid, t->state);
+      if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
+        hasNonTerminated = 1;
+        t->exitRequest = 1;
+        break;
+      }
+    }
+    if(!hasNonTerminated){
+      allTerminated = 1;
+    }
+  }
+  release(&ptable.lock);
 
   begin_op();
 

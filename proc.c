@@ -96,9 +96,9 @@ allocproc(void)
 {
   //cprintf("entered allocproc: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *p;
-  char *sp;
   struct kthread *t; // Main thread
-  int i = 0; // Index for the ptable/ttable
+  char *sp;
+  int i = 0;
 
   acquire(&ptable.lock);
 
@@ -107,7 +107,7 @@ allocproc(void)
       goto found;
     else
       i++;
-
+  
   release(&ptable.lock);
   return 0;
 
@@ -115,17 +115,23 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->threads = ptable.ttable[i].threads;
+  struct kthread *tTemp;
+  for(tTemp = p->threads; tTemp < &p->threads[NTHREAD]; tTemp++){
+    tTemp->state = UNINIT;
+  }
   t = p->threads; // First thread in the table will be the main process thread
   t->tproc = p;
   t->tid = nexttid++;
+  t->exitRequest = 0;
 
   release(&ptable.lock);
-
+  /*
   // Allocate kernel stack for the process.
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
     return 0;
   }
+  */
   // Allocate kernel stack for the thread.
   if((t->kstack = kalloc()) == 0){
     return 0;
@@ -283,7 +289,9 @@ exit(void)
 {
   //cprintf("entered exit: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *curproc = myproc();
+  struct kthread *curthread = mythread();
   struct proc *p;
+  struct kthread *t;
   int fd;
 
   if(curproc == initproc)
@@ -317,13 +325,14 @@ exit(void)
   }
 
   // tell the process threads to exit
-  struct kthread *t;
   for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
-    t->exitRequest = 1;
+    if(t->state != UNINIT)
+      t->exitRequest = 1;
   }
-
+  
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  curthread->state = TERMINATED;
   sched();
   panic("zombie exit");
 }
@@ -356,24 +365,26 @@ wait(void)
             t->kstack = 0;
             t->tid = 0;
             t->tproc = 0;
-            // TODO: check what to do with tf and context
+            t->exitRequest = 0;
+            t->state = UNINIT;
           }else{
-            if(t->state != UNINIT)
+            if(t != mythread() && t->state != UNINIT)
               hasNonTerminated = 1;
           }
         }
+        procdump();
+        cprintf("hasNonTerminated = %d\n", hasNonTerminated);
         if(!hasNonTerminated){
           // Found one.
           pid = p->pid;
-          kfree(p->kstack);
-          p->kstack = 0;
+          //kfree(p->kstack);
+          //p->kstack = 0;
           freevm(p->pgdir);
           p->pid = 0;
           p->parent = 0;
           p->name[0] = 0;
           p->killed = 0;
           p->state = UNUSED;
-          p->threads = 0;
         }
         release(&ptable.lock);
         return pid;
@@ -478,7 +489,6 @@ yield(void)
 {
   //cprintf("entered yield: process=%p, thread=%p\n", myproc(), mythread());
   acquire(&ptable.lock);  //DOC: yieldlock
-  //myproc()->state = RUNNABLE;
   mythread()->state = RUNNABLE;
   sched();
   release(&ptable.lock);
