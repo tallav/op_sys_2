@@ -9,18 +9,23 @@
 #include "memlayout.h"
 #include "kthread.h"
 
+int a=4;
+
 int printSomthing(){
     printf(1,"\n HELLO \n");
+    a=2;
+    kthread_exit();
     return 0;
 }
 
 void test_kthread_create(){
     char* ustack = (char*)malloc(4000);
-    int tid = kthread_create(&printSomthing, ustack);
+    printf(1, "a=%d\n",a);
+    int tid = kthread_create((void*)&printSomthing, ustack);
     sleep(50);
     free(ustack);
     printf(1, "created thread %d\n", tid);
-    kthread_exit();
+    printf(1, "a=%d\n",a);
     return;
 }
 
@@ -100,13 +105,13 @@ int createThreadsTest(){
         printf(1, "parent - thread id: %d\n", tid2);
     }
     printf(1, "----------------");
-    sleep(3000);*/
+    sleep(3000);
 	void(*start_func)();
     start_func = (void*)printSomething;
     char* stackPointer = (char*)malloc(4000);
     printf(1,"func address from myprog %d\n", (void*)kthread_id);
     kthread_create(start_func,stackPointer);
-	
+	*/
    return 1;
 }
 

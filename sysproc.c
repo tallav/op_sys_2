@@ -106,7 +106,7 @@ sys_kthread_create(void)
 
   if ((argptr(0, (char**)(&start_func), sizeof(int)) < 0) || (argptr(1, (char**)(&stack), sizeof(int)) < 0))
     return -1;
-return kthread_create(start_func,stack);
+  return kthread_create(start_func,stack);
 }
 
 int
@@ -118,18 +118,10 @@ sys_kthread_id(void)
 int
 sys_kthread_join(void)
 {
-<<<<<<< HEAD
   int n;
 
   if(argint(0, &n) < 0)
     return -1;
   return kthread_join(n);
-=======
-  int tid;
-
-  if(argint(0, &tid) < 0)
-    return -1;
-  return kthread_join(tid);
->>>>>>> ae8f3650d5ff620d910c5842b7b6f6c786893945
 }
 

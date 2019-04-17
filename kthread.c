@@ -44,9 +44,7 @@ int kthread_create(void (*start_func)(), void* stack){
 
     t->tproc = p;
     t->tid = nexttid++;
-    release(&ptable.lock);
-
-    t->tproc = p;    
+    release(&ptable.lock);  
 
     // Allocate kernel stack for the thread.
     if((t->kstack = kalloc()) == 0){
@@ -73,8 +71,8 @@ int kthread_create(void (*start_func)(), void* stack){
     t->ustack = stack;
     *t->tf = *mythread()->tf;
     t->tf->eip = (uint)start_func;
-    t->tf->esp=(uint)(stack + MAX_STACK_SIZE);
-    
+    t->tf->esp = (uint)(stack);
+    cprintf("thread created\n");
     return t->tid;
 }
 
@@ -121,11 +119,13 @@ void kthread_exit(){
         release(&ptable.lock);
         exit();
     }
+    /*
     for(t = threadProc->threads; t < &threadProc->threads[NTHREAD]; t++){
         if(t->tproc == threadProc && t->state != UNINIT){ // threads of the same process 
             t->exitRequest = 1;
         }
     }
+    */
     curthread->tf = 0;
     curthread->state = TERMINATED;
 	
