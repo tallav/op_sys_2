@@ -178,7 +178,7 @@ userinit(void)
   t->tf->eip = 0;  // beginning of initcode.S
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
-  t->cwd = namei("/");
+  p->cwd = namei("/");
 
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
@@ -259,7 +259,7 @@ fork(void)
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
-  nt->cwd = idup(curthread->cwd);
+  np->cwd = idup(curproc->cwd);
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
@@ -283,7 +283,6 @@ exit(void)
 {
   //cprintf("entered exit: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *curproc = myproc();
-  struct kthread *curthread = mythread();
   struct proc *p;
   int fd;
 
@@ -299,9 +298,9 @@ exit(void)
   }
 
   begin_op();
-  iput(curthread->cwd);
+  iput(curproc->cwd);
   end_op();
-  curthread->cwd = 0;
+  curproc->cwd = 0;
 
   acquire(&ptable.lock);
 
@@ -325,7 +324,6 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
-  curthread->state = TERMINATED;
   sched();
   panic("zombie exit");
 }
@@ -404,7 +402,6 @@ wait(void)
 void
 scheduler(void)
 {
-  //cprintf("entered scheduler: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *p;
   struct kthread *t;
   struct cpu *c = mycpu();
@@ -423,13 +420,16 @@ scheduler(void)
         if(t->state != RUNNABLE){
             continue;
         }
+        /*
+        if(p && t)
+          cprintf("scheduler found runnable: process=%d, thread=%d\n", p->pid, t->tid);
+        */
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
         c->proc = p;
         c->thread = t;
         switchuvm(p);
-        //p->state = RUNNING;
         t->state = RUNNING;
 
         swtch(&(c->scheduler), t->context);
@@ -455,6 +455,7 @@ scheduler(void)
 void
 sched(void)
 {
+  //cprintf("sched: thread=%d\n", mythread()->tid);
   int intena;
   struct kthread *t = mythread();
 
@@ -632,7 +633,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s || ", p->pid, state, p->name);
+    cprintf("process: %d %s %s , ", p->pid, state, p->name);
     for(t = p->threads; t < &p->threads[NTHREAD]; t++){
       if(t->state == UNINIT)
         continue;
@@ -640,11 +641,11 @@ procdump(void)
         state = states[p->state];
       else
         state = "???";
-      cprintf("%d %s || ", t->tid, state);
+      cprintf("thread: %d %s , ", t->tid, state);
       if(t->state == SLEEPING){
         getcallerpcs((uint*)t->context->ebp+2, pc);
         for(i=0; i<10 && pc[i] != 0; i++){
-          cprintf(" %p * ", pc[i]);
+          cprintf(" %p ", pc[i]);
         }
       }
     }

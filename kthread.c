@@ -18,16 +18,15 @@ struct ptable{
   struct threadTable ttable[NPROC]; // Table of all threads
 };
 
+extern int nexttid;
 extern struct ptable ptable;
 extern void trapret(void);
+extern void forkret(void);
 
 int kthread_create(void (*start_func)(), void* stack){
-    struct proc *p;
+    struct proc *p = myproc();
     struct kthread *t = 0;
-    struct cpu *c = mycpu();
     char *sp;
-
-    p = c->proc;
 
     acquire(&ptable.lock);
     int tid = 1;
@@ -42,8 +41,14 @@ int kthread_create(void (*start_func)(), void* stack){
         }
     }
 
-    if (t == 0)
+    if (t == 0){
+        release(&ptable.lock);
         return -1;
+    }
+
+    t->tproc = p;
+    t->tid = nexttid++;
+    release(&ptable.lock);
 
     // Allocate kernel stack for the thread.
     if((t->kstack = kalloc()) == 0){
@@ -54,10 +59,6 @@ int kthread_create(void (*start_func)(), void* stack){
     // Leave room for trap frame.
     sp -= sizeof *t->tf;
     t->tf = (struct trapframe*)sp;
-    t->ustack = stack;
-    t->state = RUNNABLE;
-    t->tid = tid;
-    t->tproc = p;
     
     // Set up new context to start executing at forkret,
     // which returns to trapret.
@@ -67,15 +68,19 @@ int kthread_create(void (*start_func)(), void* stack){
     sp -= sizeof *t->context;
     t->context = (struct context*)sp;
     memset(t->context, 0, sizeof *t->context);
-    t->context->eip = (uint)start_func;
-  //  t->chan = 
+    t->context->eip = (uint)forkret;
+
     t->exitRequest = 0;
-    release(&ptable.lock);
+    t->state = RUNNABLE;
+    t->ustack = stack;
+    t->tf = mythread()->tf;
+    t->tf->eip = (uint)start_func;
+    t->tf->esp=(uint)(stack + MAX_STACK_SIZE);
+    
     return t->tid;
 }
 
 int kthread_id(){
-    procdump();
     return mythread()->tid;
 }
 
@@ -99,11 +104,18 @@ void kthread_exit(){
         }
     }
     if(lastRunning){
+        release(&ptable.lock);
         exit();
     }
+    
+    cprintf("exit thread %d\n", curthread->tid);
+    procdump();
+
     // Jump into the scheduler, never to return.
     curthread->state = TERMINATED;
-    procdump();
+    release(&ptable.lock);
+    wakeup(curthread);
+    acquire(&ptable.lock);
     sched();
     panic("terminated exit");
 }

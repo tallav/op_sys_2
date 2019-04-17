@@ -94,7 +94,7 @@ sys_uptime(void)
 int
 sys_kthread_exit(void)
 {
-  exit();
+  kthread_exit();
   return 0;  // not reached
 }
 
@@ -118,7 +118,10 @@ sys_kthread_id(void)
 int
 sys_kthread_join(void)
 {
-  /*join();*/
-  return 0;  // not reached
+  int tid;
+
+  if(argint(0, &tid) < 0)
+    return -1;
+  return kthread_join(tid);
 }
 
