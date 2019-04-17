@@ -50,7 +50,7 @@ struct proc {
   //void *chan;                  // If non-zero, sleeping on chan
   int killed;                  // If non-zero, have been killed
   struct file *ofile[NOFILE];  // Open files
-  //struct inode *cwd;           // Current directory
+  struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   struct kthread *threads; // the process threads
 };
@@ -74,5 +74,5 @@ struct kthread {
   struct context *context;     // swtch() here to run process
   void *chan;                  // If non-zero, sleeping on chan
   int exitRequest;             // If one of the process threads executed exit this value will be 1
-  struct inode *cwd;           // Current directory
+  //struct inode *cwd;           // Current directory
 };

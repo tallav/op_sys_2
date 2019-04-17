@@ -118,10 +118,18 @@ sys_kthread_id(void)
 int
 sys_kthread_join(void)
 {
+<<<<<<< HEAD
   int n;
 
   if(argint(0, &n) < 0)
     return -1;
   return kthread_join(n);
+=======
+  int tid;
+
+  if(argint(0, &tid) < 0)
+    return -1;
+  return kthread_join(tid);
+>>>>>>> ae8f3650d5ff620d910c5842b7b6f6c786893945
 }
 
