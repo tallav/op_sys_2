@@ -9,9 +9,6 @@
 #include "memlayout.h"
 #include "kthread.h"
 
-int 
-exitTest(){
- int pid = fork();
 int printSomthing(){
     printf(1,"\n HELLO \n");
     return 0;
@@ -88,15 +85,8 @@ void test_kthread_join(){
     return;
 }
 
-
-void 
-printSomething(){
-    printf(1,"\nhello\n");
-}
-
-int 
-createThreadsTest(){
-   /*  int pid = fork();
+int createThreadsTest(){
+	/*int pid = fork();
     if(pid == 0){
         int tid1 = kthread_id();
         printf(1, "child - thread id: %d\n", tid1);
@@ -116,24 +106,8 @@ createThreadsTest(){
     char* stackPointer = (char*)malloc(4000);
     printf(1,"func address from myprog %d\n", (void*)kthread_id);
     kthread_create(start_func,stackPointer);
-
- 
+	
    return 1;
-}
-
-
-void
-run(){
-	int id = kthread_id();
-	int pid = getpid();
-	//int i, j;
-	printf(1, "my id: %d\n", id);
-	printf(1,"my pid: %d\n", pid);
-	/*for(i=0; i<100000;i++)
-		for(j=0; j<400;j++)
-			id++;*/
-	printf(1,"hey");
-	//kthread_exit();
 }
 
 int

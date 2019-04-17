@@ -8,11 +8,6 @@
 #include "spinlock.h"
 #include "kthread.h"
 
-
-
-void printSomething();
-extern void forkret(void);
-
 struct threadTable{
   struct kthread threads[NTHREAD]; // Thread table for every process
 };
@@ -33,10 +28,6 @@ int kthread_create(void (*start_func)(), void* stack){
     struct kthread *t = 0;
     char *sp;
 
-    p = myproc();
-
-    cprintf("kthread_create\n");
-
     acquire(&ptable.lock);
     struct kthread *tempT;
     for(tempT = p->threads; tempT < &p->threads[NTHREAD]; tempT++){
@@ -45,8 +36,6 @@ int kthread_create(void (*start_func)(), void* stack){
             break;
         }
     }
-    t->tid = tid;
-    release(&ptable.lock);
 
     if (t == 0){
         release(&ptable.lock);
@@ -69,9 +58,6 @@ int kthread_create(void (*start_func)(), void* stack){
     sp -= sizeof *t->tf;
     t->tf = (struct trapframe*)sp;
    
-  
-        
-    
     // Set up new context to start executing at forkret,
     // which returns to trapret.
     sp -= 4;
@@ -112,7 +98,6 @@ int kthread_create(void (*start_func)(), void* stack){
         return -1;
 }*/
 
-
 int kthread_id(){
     return mythread()->tid;
 }
@@ -136,15 +121,14 @@ void kthread_exit(){
         release(&ptable.lock);
         exit();
     }
-
     for(t = threadProc->threads; t < &threadProc->threads[NTHREAD]; t++){
         if(t->tproc == threadProc && t->state != UNINIT){ // threads of the same process 
             t->exitRequest = 1;
         }
     }
-
     curthread->tf = 0;
     curthread->state = TERMINATED;
+	
     release(&ptable.lock);
     wakeup(curthread);
     acquire(&ptable.lock);
