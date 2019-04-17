@@ -8,6 +8,11 @@
 #include "spinlock.h"
 #include "kthread.h"
 
+
+
+void printSomething();
+extern void forkret(void);
+
 struct threadTable{
   struct kthread threads[NTHREAD]; // Thread table for every process
 };
@@ -28,6 +33,10 @@ int kthread_create(void (*start_func)(), void* stack){
     struct kthread *t = 0;
     char *sp;
 
+    p = myproc();
+
+    cprintf("kthread_create\n");
+
     acquire(&ptable.lock);
     struct kthread *tempT;
     for(tempT = p->threads; tempT < &p->threads[NTHREAD]; tempT++){
@@ -36,6 +45,8 @@ int kthread_create(void (*start_func)(), void* stack){
             break;
         }
     }
+    t->tid = tid;
+    release(&ptable.lock);
 
     if (t == 0){
         release(&ptable.lock);
@@ -46,6 +57,8 @@ int kthread_create(void (*start_func)(), void* stack){
     t->tid = nexttid++;
     release(&ptable.lock);
 
+    t->tproc = p;    
+
     // Allocate kernel stack for the thread.
     if((t->kstack = kalloc()) == 0){
         return 0;
@@ -55,6 +68,9 @@ int kthread_create(void (*start_func)(), void* stack){
     // Leave room for trap frame.
     sp -= sizeof *t->tf;
     t->tf = (struct trapframe*)sp;
+   
+  
+        
     
     // Set up new context to start executing at forkret,
     // which returns to trapret.
@@ -75,6 +91,27 @@ int kthread_create(void (*start_func)(), void* stack){
     
     return t->tid;
 }
+
+/*kthread getThread(int tid){
+    struct proc *p;
+    struct kthread *t = 0;
+    struct cpu *c = mycpu();
+    char *sp;
+
+    p = c->proc;
+
+    acquire(&ptable.lock);
+    int tid = 1;
+    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+        if(t->tid == tid){
+            return t;
+        }
+    }
+
+    if (t == 0)
+        return -1;
+}*/
+
 
 int kthread_id(){
     return mythread()->tid;
@@ -121,7 +158,6 @@ int kthread_join(int thread_id){
     cprintf("entered kthread_join with thread_id: %d\n", thread_id);
     struct proc *p = myproc();
     struct kthread *t = 0;
-    
     if(mythread()->tid == thread_id){
         cprintf("join on my thread id\n");
         return -1;
