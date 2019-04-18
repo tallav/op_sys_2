@@ -135,6 +135,10 @@ static int (*syscalls[])(void) = {
 [SYS_kthread_join] sys_kthread_join,
 [SYS_kthread_create]   sys_kthread_create,
 [SYS_kthread_id]   sys_kthread_id,
+[SYS_kthread_mutex_alloc] sys_kthread_mutex_alloc,
+[SYS_kthread_mutex_dealloc] sys_kthread_mutex_dealloc,
+[SYS_kthread_mutex_lock] sys_kthread_mutex_lock,
+[SYS_kthread_mutex_unlock] sys_kthread_mutex_unlock,
 };
 
 void
