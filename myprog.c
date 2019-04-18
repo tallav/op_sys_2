@@ -10,6 +10,8 @@
 #include "kthread.h"
 
 int a = 4;
+int mutex;
+int test;
 
 int printSomthing(){
     printf(1,"\n HELLO \n");
@@ -65,7 +67,7 @@ run(){
 }
 
 int
-test_kthread()
+Test()
 {
 	void* stack = (void*)malloc(4000);
 	int pid = getpid();
@@ -77,12 +79,10 @@ test_kthread()
 	exit();
 }
 
-int mutex;
-int test;
-
-void printer (){
-	int input;
-	input = kthread_mutex_lock(mutex);
+void
+printer()
+{
+	int input = kthread_mutex_lock(mutex);
 	if(input<0)
 		printf(1,"Error: thread mutex didnt lock!");
 	printf(1,"thread %d said hi\n",kthread_id());
@@ -94,7 +94,10 @@ void printer (){
 	printf(1,"Error: returned from exit !!");
 }
 
-int test_mutex(){
+int 
+mutexTest()
+{
+
 	printf(1,"~~~~~~~~~~~~~~~~~~\ntest starts\nIf it ends without Errors you win! : )\n~~~~~~~~~~~~~~~~~~\n");
 	int input,i;
 	mutex = kthread_mutex_alloc();
@@ -106,7 +109,7 @@ int test_mutex(){
 		input = kthread_mutex_lock(mutex);
 		if(input<0)
 			printf(1,"Error: mutex didnt lock! (%d)\n",input);
-		char *stack = malloc(4000);
+		char * stack = malloc (1024);
 		int tid = kthread_create ((void*)printer, stack);
 		if(tid<0) printf(1,"Thread wasnt created correctly! (%d)\n",tid);
 		printf(1,"joining on thread %d\n",tid);
@@ -122,7 +125,7 @@ int test_mutex(){
 	if(input<0)
 		printf(1,"Error: mutex didnt dealloc!\n");
 	exit();
-	printf(1,"Error: returned from exit !!\n");
+    printf(1,"Error: returned from exit !!\n");
 }
 
 
@@ -132,8 +135,9 @@ main(int argc, char *argv[])
     //test_kthread_exit();
     //test_kthread_create();
     //test_kthread_join();
-    //test_kthread();
-    test_mutex();
+    //Test();
+
+    mutexTest();
     printf(1, "finish\n");
     exit();
 }
