@@ -27,6 +27,10 @@ void kthread_exit(void);
 int kthread_join(int);
 int kthread_create(void (*start_func)(), void* stack);//(void, void*);
 int kthread_id(void);
+int kthread_mutex_alloc();
+int kthread_mutex_dealloc(int);
+int kthread_mutex_lock(int);
+int kthread_mutex_unlock(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
