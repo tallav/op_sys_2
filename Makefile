@@ -16,6 +16,7 @@ OBJS = \
 	pipe.o\
 	proc.o\
 	kthread.o\
+	mutex.o\
 	sleeplock.o\
 	spinlock.o\
 	string.o\

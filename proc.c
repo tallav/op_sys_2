@@ -5,6 +5,7 @@
 #include "mmu.h"
 #include "x86.h"
 #include "proc.h"
+#include "kthread.h"
 #include "spinlock.h"
 
 struct threadTable{
@@ -17,8 +18,23 @@ struct ptable {
   struct threadTable ttable[NPROC]; // Table of all threads
 };
 
-
 struct ptable ptable;
+
+struct kthread_mutex_t{
+  struct spinlock lock;
+  int id; // mutex id
+  int locked; // value 1 if it's locked
+  int tid; // thread id of the locking thread
+  int used; // lock alredy allocated
+};
+
+struct mutexTable {
+  struct spinlock lock;
+  struct kthread_mutex_t mutexes[MAX_MUTEXES];
+};
+
+extern struct mutexTable mutexTable;
+
 static struct proc *initproc;
 
 int nextpid = 1;
@@ -32,6 +48,7 @@ void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
+  initlock(&mutexTable.lock, "mutexTable");
 }
 
 // Must be called with interrupts disabled
@@ -372,8 +389,8 @@ wait(void)
               hasNonTerminated = 1;
           }
         }
-        procdump();
-        cprintf("hasNonTerminated = %d\n", hasNonTerminated);
+        //procdump();
+        //cprintf("hasNonTerminated = %d\n", hasNonTerminated);
         if(!hasNonTerminated){
           // Found one.
           pid = p->pid;

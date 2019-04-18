@@ -72,7 +72,7 @@ int kthread_create(void (*start_func)(), void* stack){
     *t->tf = *mythread()->tf;
     t->tf->eip = (uint)start_func;
     t->tf->esp = (uint)(stack);
-    cprintf("thread created\n");
+    cprintf("thread created tid=%d\n", t->tid);
     return t->tid;
 }
 
@@ -97,6 +97,7 @@ int kthread_create(void (*start_func)(), void* stack){
 }*/
 
 int kthread_id(){
+    procdump();
     return mythread()->tid;
 }
 
@@ -172,4 +173,34 @@ int kthread_join(int thread_id){
     t->state = UNINIT;
     release(&ptable.lock);
     return 0;
+}
+
+// Wake up all threads sleeping on chan.
+// The ptable lock must be held.
+static void
+wakeupThreads1(void *chan)
+{
+  //cprintf("entered wakeup1: process=%p, thread=%p\n", myproc(), mythread());
+  struct proc *p;
+  struct kthread *t;
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED){
+      continue;
+    }
+    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+      if(t->state == BLOCKED && t->chan == chan){
+        t->state = RUNNABLE;
+      }
+    }
+  }
+}
+
+// Wake up all processes sleeping on chan.
+void
+wakeupThreads(void *chan)
+{
+  acquire(&ptable.lock);
+  wakeupThreads1(chan);
+  release(&ptable.lock);
 }
