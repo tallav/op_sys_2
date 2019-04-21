@@ -38,8 +38,18 @@ exec(char *path, char **argv)
     cprintf("exec: thread got exit request\n");
     kthread_exit();
     return -1;
+  }else{
+    acquire(&ptable.lock);
+    struct kthread *t;
+    for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
+      //cprintf("exec: thread %d state %d\n", t->tid, t->state);
+      if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
+        t->exitRequest = 1;
+      }
+    }
+    release(&ptable.lock);
   }
-
+  /*
   acquire(&ptable.lock);
   struct kthread *t;
   int allTerminated = 0;
@@ -51,7 +61,6 @@ exec(char *path, char **argv)
       if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
         hasNonTerminated = 1;
         t->exitRequest = 1;
-        break;
       }
     }
     if(!hasNonTerminated){
@@ -59,7 +68,7 @@ exec(char *path, char **argv)
     }
   }
   release(&ptable.lock);
-
+  */
   begin_op();
 
   if((ip = namei(path)) == 0){

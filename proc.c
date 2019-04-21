@@ -314,44 +314,65 @@ exit(void)
   if(curproc == initproc)
     panic("init exiting");
 
-  // Close all open files.
-  for(fd = 0; fd < NOFILE; fd++){
-    if(curproc->ofile[fd]){
-      fileclose(curproc->ofile[fd]);
-      curproc->ofile[fd] = 0;
-    }
-  }
-
-  begin_op();
-  iput(curproc->cwd);
-  end_op();
-  curproc->cwd = 0;
-
   acquire(&ptable.lock);
-
-  // Parent might be sleeping in wait().
-  wakeup1(curproc->parent);
-
-  // Pass abandoned children to init.
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->parent == curproc){
-      p->parent = initproc;
-      if(p->state == ZOMBIE)
-        wakeup1(initproc);
-    }
-  }
-
   // tell the process threads to exit
   for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
     if(t->state != UNINIT)
       t->exitRequest = 1;
   }
   
-  // Jump into the scheduler, never to return.
-  curproc->state = ZOMBIE;
+  // terminate the current thread
+  t->tid = 0;
+  t->tproc = 0;
+  t->exitRequest = 0;
+  curthread->tf = 0;
+  wakeup1(curthread);
   curthread->state = TERMINATED;
-  sched();
-  panic("zombie exit");
+  
+  // check if it is the last running thread. if it is, the process execute exit();
+  int lastRunning = 1;
+  for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
+      if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
+          lastRunning = 0;
+      }
+  }
+
+  if(lastRunning){
+    release(&ptable.lock);
+    // Close all open files.
+    for(fd = 0; fd < NOFILE; fd++){
+      if(curproc->ofile[fd]){
+        fileclose(curproc->ofile[fd]);
+        curproc->ofile[fd] = 0;
+      }
+    }
+
+    begin_op();
+    iput(curproc->cwd);
+    end_op();
+    curproc->cwd = 0;
+
+    acquire(&ptable.lock);
+    // Parent might be sleeping in wait().
+    wakeup1(curproc->parent);
+
+    // Pass abandoned children to init.
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->parent == curproc){
+        p->parent = initproc;
+        if(p->state == ZOMBIE)
+          wakeup1(initproc);
+      }
+    }
+
+    // Jump into the scheduler, never to return.
+    curproc->state = ZOMBIE;
+    sched();
+    panic("zombie exit");
+  }
+  else{
+    release(&ptable.lock);
+  }
 }
 
 // Wait for a child process to exit and return its pid.
@@ -377,25 +398,23 @@ wait(void)
         // clean all the process threads
         int hasNonTerminated = 0;
         for(t = p->threads; t < &p->threads[NTHREAD]; t++){
-          if(t->state == TERMINATED){
+          /*if(t->state == TERMINATED){
             kfree(t->kstack);
             t->kstack = 0;
             t->tid = 0;
             t->tproc = 0;
             t->exitRequest = 0;
             t->state = UNINIT;
-          }else{
-            if(t != mythread() && t->state != UNINIT)
+          }else{*/
+            if(t != mythread() && t->state != UNINIT && t->state != TERMINATED){
               hasNonTerminated = 1;
-          }
+            }
         }
         //procdump();
         //cprintf("hasNonTerminated = %d\n", hasNonTerminated);
         if(!hasNonTerminated){
           // Found one.
           pid = p->pid;
-          //kfree(p->kstack);
-          //p->kstack = 0;
           freevm(p->pgdir);
           p->pid = 0;
           p->parent = 0;

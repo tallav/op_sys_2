@@ -82,11 +82,10 @@ int kthread_mutex_lock(int mutex_id){
     struct kthread *curthread = mythread();
     acquire(&mutex->lock);
     while (mutex->locked) {
-        curthread->state = BLOCKED;
-        sleep(myproc(), &mutex->lock);
+        sleep(curthread, &mutex->lock);
     }
     mutex->locked = 1;
-    mutex->tid = mythread()->tid;
+    mutex->tid = curthread->tid;
     release(&mutex->lock);
     return 0;
 }
@@ -111,7 +110,7 @@ int kthread_mutex_unlock(int mutex_id){
     acquire(&mutex->lock);
     mutex->locked = 0;
     mutex->tid = 0;
-    wakeupThreads(myproc());
     release(&mutex->lock);
+    wakeup(curthread);
     return 0;
 }

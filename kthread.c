@@ -88,6 +88,7 @@ void kthread_exit(){
     struct kthread *t;
 
     acquire(&ptable.lock);
+    
     // check if it is the last running thread. if it is, the process execute exit();
     threadProc = curthread->tproc;
     int lastRunning = 1;
@@ -100,34 +101,36 @@ void kthread_exit(){
         release(&ptable.lock);
         exit();
     }
+    
+    t->tid = 0;
+    t->tproc = 0;
+    t->exitRequest = 0;
     curthread->tf = 0;
-    curthread->state = TERMINATED;
-	
+    
     release(&ptable.lock);
     wakeup(curthread);
     acquire(&ptable.lock);
 
     // Jump into the scheduler, never to return.
+    curthread->state = TERMINATED;
     sched();
     panic("terminated exit");
 }
 
 int kthread_join(int thread_id){
     //cprintf("entered kthread_join with thread_id: %d\n", thread_id);
-    struct proc *p = myproc();
+    struct proc *curproc = myproc();
     struct kthread *curthread = mythread();
-    struct kthread *t = 0;
-    if(mythread()->tid == thread_id){
+    struct kthread *t;
+    if(curthread->tid == thread_id){
         cprintf("join on my thread id\n");
         return -1;
     }
 
     acquire(&ptable.lock);
     // look for the thread with this id
-    struct kthread *tempT;
-    for(tempT = p->threads; tempT < &p->threads[NTHREAD]; tempT++){
-        if (tempT->tid == thread_id){
-            t = tempT;
+    for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
+        if (t->tid == thread_id){
             break;
         }
     }
@@ -136,11 +139,11 @@ int kthread_join(int thread_id){
         return -1;
     }
     if (t->state == UNINIT){ // thread was not initialized - no need to wait
-         release(&ptable.lock);
-         return 0;
+        release(&ptable.lock);
+        return -1;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
-        sleep(curthread, &ptable.lock);
+        sleep(t, &ptable.lock);
     }
     kfree(t->kstack);
     t->kstack = 0;
