@@ -104,7 +104,7 @@ int kthread_mutex_unlock(int mutex_id){
         return -1;
     }
     struct kthread *curthread = mythread();
-    if(curthread->tid != mutex->tid){
+    if(curthread->tid != mutex->tid){ 
         cprintf("thread is not holding the lock\n");
         return -1;
     }

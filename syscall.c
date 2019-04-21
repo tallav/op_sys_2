@@ -113,7 +113,6 @@ extern int sys_kthread_mutex_dealloc(void);
 extern int sys_kthread_mutex_lock(void);
 extern int sys_kthread_mutex_unlock(void);
 
-
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
