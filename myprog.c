@@ -97,7 +97,6 @@ printer()
 int 
 mutexTest()
 {
-
 	printf(1,"~~~~~~~~~~~~~~~~~~\ntest starts\nIf it ends without Errors you win! : )\n~~~~~~~~~~~~~~~~~~\n");
 	int input,i;
 	mutex = kthread_mutex_alloc();
@@ -109,7 +108,7 @@ mutexTest()
 		input = kthread_mutex_lock(mutex);
 		if(input<0)
 			printf(1,"Error: mutex didnt lock! (%d)\n",input);
-		char * stack = malloc (1024);
+		char* stack = malloc(4000);
 		int tid = kthread_create ((void*)printer, stack);
 		if(tid<0) printf(1,"Thread wasnt created correctly! (%d)\n",tid);
 		printf(1,"joining on thread %d\n",tid);

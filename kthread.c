@@ -23,7 +23,7 @@ extern void trapret(void);
 extern void forkret(void);
 
 int kthread_create(void (*start_func)(), void* stack){
-    cprintf("entered kthread_create\n");
+    //cprintf("entered kthread_create\n");
     struct proc *p = myproc();
     struct kthread *t = 0;
     char *sp;
@@ -72,37 +72,17 @@ int kthread_create(void (*start_func)(), void* stack){
     *t->tf = *mythread()->tf;
     t->tf->eip = (uint)start_func;
     t->tf->esp = (uint)(stack);
-    cprintf("thread created tid=%d\n", t->tid);
+    //cprintf("thread created tid=%d\n", t->tid);
     return t->tid;
 }
 
-/*kthread getThread(int tid){
-    struct proc *p;
-    struct kthread *t = 0;
-    struct cpu *c = mycpu();
-    char *sp;
-
-    p = c->proc;
-
-    acquire(&ptable.lock);
-    int tid = 1;
-    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
-        if(t->tid == tid){
-            return t;
-        }
-    }
-
-    if (t == 0)
-        return -1;
-}*/
-
 int kthread_id(){
-    procdump();
+    //procdump();
     return mythread()->tid;
 }
 
 void kthread_exit(){
-    cprintf("entered kthread_exit\n");
+    //cprintf("entered kthread_exit\n");
     struct kthread *curthread = mythread();
     struct proc *threadProc;
     struct kthread *t;
@@ -120,13 +100,6 @@ void kthread_exit(){
         release(&ptable.lock);
         exit();
     }
-    /*
-    for(t = threadProc->threads; t < &threadProc->threads[NTHREAD]; t++){
-        if(t->tproc == threadProc && t->state != UNINIT){ // threads of the same process 
-            t->exitRequest = 1;
-        }
-    }
-    */
     curthread->tf = 0;
     curthread->state = TERMINATED;
 	
@@ -140,8 +113,9 @@ void kthread_exit(){
 }
 
 int kthread_join(int thread_id){
-    cprintf("entered kthread_join with thread_id: %d\n", thread_id);
+    //cprintf("entered kthread_join with thread_id: %d\n", thread_id);
     struct proc *p = myproc();
+    struct kthread *curthread = mythread();
     struct kthread *t = 0;
     if(mythread()->tid == thread_id){
         cprintf("join on my thread id\n");
@@ -166,7 +140,7 @@ int kthread_join(int thread_id){
          return 0;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
-        sleep(t, &ptable.lock);
+        sleep(curthread, &ptable.lock);
     }
     kfree(t->kstack);
     t->kstack = 0;
