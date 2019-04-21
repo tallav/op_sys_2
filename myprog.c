@@ -105,6 +105,7 @@ mutexTest()
 	if(mutex<0)
 		printf(1,"Error: mutex didnt alloc! (%d)\n",mutex);
 	for(i = 0; i<5; i++){
+        printf(1,"index: %d\n",i);
 		test=0;
 		input = kthread_mutex_lock(mutex);
 		if(input<0)
