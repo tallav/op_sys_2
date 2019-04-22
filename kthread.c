@@ -22,6 +22,15 @@ extern int nexttid;
 extern void trapret(void);
 extern void forkret(void);
 
+void wakeupThreads2(void* chan){
+	struct kthread* t=mythread();
+	for(t=t->tproc->threads;t<&t->tproc->threads[NTHREAD];t++){
+		if(t->state==SLEEPING&&t->chan==chan){
+			t->state=RUNNABLE;
+		}
+	}
+}
+
 int kthread_create(void (*start_func)(), void* stack){
     //cprintf("entered kthread_create\n");
     struct proc *p = myproc();
@@ -105,8 +114,8 @@ void kthread_exit(){
     curthread->tproc = 0;
     curthread->exitRequest = 0;
     curthread->tf = 0;
-    
-    release(&ptable.lock);
+	
+   release(&ptable.lock);
     wakeup(curthread);
     acquire(&ptable.lock);
 
@@ -114,6 +123,7 @@ void kthread_exit(){
     curthread->state = TERMINATED;
     sched();
     panic("terminated exit");
+    }
 }
 
 int kthread_join(int thread_id){
@@ -137,6 +147,12 @@ int kthread_join(int thread_id){
         return -1;
     }
     if (t->state == UNINIT){ // thread was not initialized - no need to wait
+         release(&ptable.lock);
+         return -1;
+    }
+    while (t->state != TERMINATED){ // thread is not finished yet
+      //  cprintf("thread not done yes, go to sleep, waiting thread id: %d and state:%d, waiting for thread: %d, state: %d \n",mythread()->tid, mythread()->state,
+         //thread_id, t->state);
         release(&ptable.lock);
         return -1;
     }
@@ -149,3 +165,34 @@ int kthread_join(int thread_id){
     release(&ptable.lock);
     return 0;
 }
+
+// Wake up all threads sleeping on chan.
+// The ptable lock must be held.
+static void
+wakeupThreads1(void *chan)
+{
+  //cprintf("entered wakeup1: process=%p, thread=%p\n", myproc(), mythread());
+  struct proc *p;
+  struct kthread *t;
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED){
+      continue;
+    }
+    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+      if(t->state == SLEEPING && t->chan == chan){
+        t->state = RUNNABLE;
+      }
+    }
+  }
+}
+
+// Wake up all processes sleeping on chan.
+void
+wakeupThreads(void *chan)
+{
+  acquire(&ptable.lock);
+  wakeupThreads1(chan);
+  release(&ptable.lock);
+}
+

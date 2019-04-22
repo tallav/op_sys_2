@@ -315,6 +315,19 @@ exit(void)
     panic("init exiting");
 
   acquire(&ptable.lock);
+  //wakeup1(curthread);
+  // Parent might be sleeping in wait().
+  wakeup1(curproc->parent);
+
+  // Pass abandoned children to init.
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->parent == curproc){
+      p->parent = initproc;
+      if(p->state == ZOMBIE)
+        wakeup1(initproc);
+    }
+  }
+
   // tell the process threads to exit
   for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
     if(t->state != UNINIT && t->state != TERMINATED)
@@ -394,6 +407,7 @@ wait(void)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
+        //pid = p->pid;
         // clean all the process threads
         int hasNonTerminated = 0;
         for(t = p->threads; t < &p->threads[NTHREAD]; t++){

@@ -33,6 +33,7 @@ int kthread_mutex_alloc(){
             mutex->locked = 0;
             mutex->tid = 0;
             mutex->used = 1;
+          //  cprintf("mutex alloced, mutex id: %d \n", mutex->id);
             break;
         }
         i++;
@@ -63,6 +64,7 @@ int kthread_mutex_dealloc(int mutex_id){
             }
         }
     }
+   // cprintf("mutex -de-alloced, mutex id: %d \n", mutex->id);
     release(&mutexTable.lock);
     return -1; // mutex_id does not exist
 }
@@ -90,6 +92,7 @@ int kthread_mutex_lock(int mutex_id){
         mutex->tid = curthread->tid;
     }
     release(&mutex->lock);
+   // cprintf("mutex id: %d locked for thread id: %d \n", mutex->id,mutex->tid);
     return 0;
 }
 
@@ -111,9 +114,14 @@ int kthread_mutex_unlock(int mutex_id){
         return -1;
     }
     acquire(&mutex->lock);
+  //  cprintf("mutex id: %d unlocked for thread id: %d \n", mutex->id,mutex->tid);
     mutex->locked = 0;
     //mutex->tid = 0;
     release(&mutex->lock);
+<<<<<<< HEAD
+    wakeupThreads(myproc());
+=======
     wakeup(curthread);
+>>>>>>> 1d9fda8d91af20f4e2c199932d753a3cfe2e09c9
     return 0;
 }
