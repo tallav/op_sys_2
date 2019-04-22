@@ -304,7 +304,7 @@ fork(void)
 void
 exit(void)
 {
-  //cprintf("entered exit: process=%p, thread=%p\n", myproc(), mythread());
+  //cprintf("entered exit: process=%d, thread=%d\n", myproc()->pid, mythread()->tid);
   struct proc *curproc = myproc();
   struct kthread *curthread = mythread();
   struct proc *p;
@@ -317,17 +317,15 @@ exit(void)
   acquire(&ptable.lock);
   // tell the process threads to exit
   for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
-    if(t->state != UNINIT)
+    if(t->state != UNINIT && t->state != TERMINATED)
       t->exitRequest = 1;
   }
   
-  // terminate the current thread
-  t->tid = 0;
-  t->tproc = 0;
-  t->exitRequest = 0;
+  /* terminate the current thread
+  curthread->tproc = 0;
+  curthread->exitRequest = 0;
   curthread->tf = 0;
-  wakeup1(curthread);
-  curthread->state = TERMINATED;
+  wakeup1(curthread);*/
   
   // check if it is the last running thread. if it is, the process execute exit();
   int lastRunning = 1;
@@ -367,6 +365,7 @@ exit(void)
 
     // Jump into the scheduler, never to return.
     curproc->state = ZOMBIE;
+    curthread->state = TERMINATED;
     sched();
     panic("zombie exit");
   }
@@ -500,8 +499,10 @@ sched(void)
     panic("sched ptable.lock");
   if(mycpu()->ncli != 1)
     panic("sched locks");
-  if(t->state == RUNNING)
+  if(t->state == RUNNING){
+    cprintf("sched thread=%d\n", t->tid);
     panic("sched running");
+  }
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = mycpu()->intena;
@@ -597,7 +598,6 @@ wakeup1(void *chan)
     }
     for(t = p->threads; t < &p->threads[NTHREAD]; t++){
       if(t->state == SLEEPING && t->chan == chan){
-        //p->state = RUNNABLE;  
         t->state = RUNNABLE;
       }
     }

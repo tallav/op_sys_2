@@ -84,8 +84,11 @@ int kthread_mutex_lock(int mutex_id){
     while (mutex->locked) {
         sleep(curthread, &mutex->lock);
     }
-    mutex->locked = 1;
-    mutex->tid = curthread->tid;
+    if(mutex->tid != curthread->tid && mutex->locked == 0){
+        cprintf("thread %d locking the mutex\n", curthread->tid);
+        mutex->locked = 1;
+        mutex->tid = curthread->tid;
+    }
     release(&mutex->lock);
     return 0;
 }
@@ -109,7 +112,7 @@ int kthread_mutex_unlock(int mutex_id){
     }
     acquire(&mutex->lock);
     mutex->locked = 0;
-    mutex->tid = 0;
+    //mutex->tid = 0;
     release(&mutex->lock);
     wakeup(curthread);
     return 0;

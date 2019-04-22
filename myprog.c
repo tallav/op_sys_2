@@ -9,9 +9,8 @@
 #include "memlayout.h"
 #include "kthread.h"
 
+/*
 int a = 4;
-int mutex;
-int test;
 
 int printSomthing(){
     printf(1,"\n HELLO \n");
@@ -78,6 +77,9 @@ Test()
     kthread_id();
 	exit();
 }
+*/
+int mutex;
+int test;
 
 void
 printer()
@@ -109,7 +111,7 @@ mutexTest()
 		input = kthread_mutex_lock(mutex);
 		if(input<0)
 			printf(1,"Error: mutex didnt lock! (%d)\n",input);
-		char* stack = malloc(4000);
+		char* stack = malloc(MAX_STACK_SIZE);
 		int tid = kthread_create ((void*)printer, stack);
 		if(tid<0) printf(1,"Thread wasnt created correctly! (%d)\n",tid);
 		printf(1,"joining on thread %d\n",tid);
@@ -128,16 +130,50 @@ mutexTest()
     printf(1,"Error: returned from exit !!\n");
 }
 
+int THREAD_NUM = 5;
+
+void run(){
+	int id = kthread_id(); 
+	printf(1,"thread %d entering\n", id); 
+	sleep(id*100);
+	printf(1,"thread %d exiting\n", id); 
+	kthread_exit(); 
+}
+
+void test_kthread_create(){
+	void* threads_stacks[THREAD_NUM];
+	for(int i = 0; i < THREAD_NUM; i++){
+		char* ustack = (char*)malloc(MAX_STACK_SIZE);
+		threads_stacks[i] = ustack;
+	}
+    for(int i = 0; i < THREAD_NUM; i++){
+        kthread_create(run, threads_stacks[i]);
+    }
+	sleep(1000);
+    exit();
+}
+
+void run1(){
+	int id = kthread_id();
+	printf(1, "my id: %d\n", id);
+	sleep(id*100);
+	printf(1,"hello\n");
+	kthread_exit();
+}
+
+void test1(){
+	void* stack = (void*)malloc(MAX_STACK_SIZE);
+	int tid = kthread_create(run1, stack);
+	int res = kthread_join(tid);
+	printf(1, "result: %d, tid: %d\n", res, tid);
+	exit();
+}
 
 int
 main(int argc, char *argv[])
 {
-    //test_kthread_exit();
     //test_kthread_create();
-    //test_kthread_join();
-    //Test();
-
+	//test1();
     mutexTest();
-    printf(1, "finish\n");
     exit();
 }
