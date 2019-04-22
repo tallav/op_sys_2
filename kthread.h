@@ -15,19 +15,7 @@ int kthread_mutex_dealloc(int mutex_id);
 int kthread_mutex_lock(int mutex_id);
 int kthread_mutex_unlock(int mutex_id);
 
-<<<<<<< HEAD
-
-void wakeupThreads2(void *chan);
-void wakeupThreads(void *chan);
-/*
-trnmnt_tree* trnmnt_tree_alloc(int depth);
-int trnmnt_tree_dealloc(trnmnt_tree* tree);
-int trnmnt_tree_acquire(trnmnt_tree* tree,int ID);
-int trnmnt_tree_release(trnmnt_tree* tree,int ID);
-*/
-=======
 struct trnmnt_tree* trnmnt_tree_alloc(int depth);
 int trnmnt_tree_dealloc(struct trnmnt_tree* tree);
 int trnmnt_tree_acquire(struct trnmnt_tree* tree,int ID);
 int trnmnt_tree_release(struct trnmnt_tree* tree,int ID);
->>>>>>> 1d9fda8d91af20f4e2c199932d753a3cfe2e09c9

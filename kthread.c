@@ -123,7 +123,7 @@ void kthread_exit(){
     curthread->state = TERMINATED;
     sched();
     panic("terminated exit");
-    }
+    
 }
 
 int kthread_join(int thread_id){

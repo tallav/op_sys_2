@@ -118,10 +118,6 @@ int kthread_mutex_unlock(int mutex_id){
     mutex->locked = 0;
     //mutex->tid = 0;
     release(&mutex->lock);
-<<<<<<< HEAD
-    wakeupThreads(myproc());
-=======
     wakeup(curthread);
->>>>>>> 1d9fda8d91af20f4e2c199932d753a3cfe2e09c9
     return 0;
 }
