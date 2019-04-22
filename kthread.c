@@ -22,6 +22,15 @@ extern int nexttid;
 extern void trapret(void);
 extern void forkret(void);
 
+void wakeupThreads2(void* chan){
+	struct kthread* t=mythread();
+	for(t=t->tproc->threads;t<&t->tproc->threads[NTHREAD];t++){
+		if(t->state==SLEEPING&&t->chan==chan){
+			t->state=RUNNABLE;
+		}
+	}
+}
+
 int kthread_create(void (*start_func)(), void* stack){
     //cprintf("entered kthread_create\n");
     struct proc *p = myproc();
@@ -99,23 +108,25 @@ void kthread_exit(){
     if(lastRunning){
         release(&ptable.lock);
         exit();
-    }
+    }else{
     curthread->tf = 0;
+   // curthread->exitRequest = 1;
     curthread->state = TERMINATED;
 	
-    release(&ptable.lock);
+   release(&ptable.lock);
     wakeup(curthread);
     acquire(&ptable.lock);
 
     // Jump into the scheduler, never to return.
     sched();
     panic("terminated exit");
+    }
 }
 
 int kthread_join(int thread_id){
     //cprintf("entered kthread_join with thread_id: %d\n", thread_id);
     struct proc *p = myproc();
-    struct kthread *curthread = mythread();
+   // struct kthread *curthread = mythread();
     struct kthread *t = 0;
     if(mythread()->tid == thread_id){
         cprintf("join on my thread id\n");
@@ -137,11 +148,11 @@ int kthread_join(int thread_id){
     }
     if (t->state == UNINIT){ // thread was not initialized - no need to wait
          release(&ptable.lock);
-         return 0;
+         return -1;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
-        cprintf("thread not done yes, go to sleep, waiting thread id: %d and state:%d, waiting for thread: %d, state: %d \n",mythread()->tid, mythread()->state,
-         thread_id, t->state);
+      //  cprintf("thread not done yes, go to sleep, waiting thread id: %d and state:%d, waiting for thread: %d, state: %d \n",mythread()->tid, mythread()->state,
+         //thread_id, t->state);
         sleep(t, &ptable.lock);
     }
     kfree(t->kstack);
@@ -165,7 +176,7 @@ wakeupThreads1(void *chan)
       continue;
     }
     for(t = p->threads; t < &p->threads[NTHREAD]; t++){
-      if(t->state == BLOCKED && t->chan == chan){
+      if(t->state == SLEEPING && t->chan == chan){
         t->state = RUNNABLE;
       }
     }
@@ -180,3 +191,4 @@ wakeupThreads(void *chan)
   wakeupThreads1(chan);
   release(&ptable.lock);
 }
+

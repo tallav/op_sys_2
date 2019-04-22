@@ -42,22 +42,22 @@ exec(char *path, char **argv)
 
   acquire(&ptable.lock);
   struct kthread *t;
-  int allTerminated = 0;
+  //int allTerminated = 0;
   // wait until the other threads in the process are terminated before executing
-  while(!allTerminated){
-    int hasNonTerminated = 0;
+  //while(!allTerminated){
+    //int hasNonTerminated = 0;
     for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
       //cprintf("exec: thread %d state %d\n", t->tid, t->state);
       if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
-        hasNonTerminated = 1;
+       // hasNonTerminated = 1;
         t->exitRequest = 1;
-        break;
+        //break;
       }
     }
-    if(!hasNonTerminated){
-      allTerminated = 1;
-    }
-  }
+   // if(!hasNonTerminated){
+     // allTerminated = 1;
+    //}
+ // }
   release(&ptable.lock);
 
   begin_op();

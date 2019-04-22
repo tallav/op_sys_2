@@ -1,0 +1,151 @@
+$ Starting allocating a lot of mutexes in different process without deallocating
+Waiting for 0 process
+Waiting for 1 process
+Waiting for 2 process
+Waiting for 3 process
+Waiting for 4 process
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mmmutex allocated unsuccessfully
+utex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocatmutex allocated unsuccessfully
+mutex allocated unsuccessfully
+ed unsuccessfully
+utex allocated unsuccessfully
+Waiting for 5 process
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsmutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutemutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccesuccessfully
+mutex allocated unsuccessfully
+x allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocatesfully
+d unsuccessfully
+Waiting for 6 process
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocatedmutex amutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfullm unsuccessfully
+mutex allocated unsuccessfully
+llocated unsuccessfully
+y
+mutex allocated unsuccessfully
+mumutex allocated unsuccessfully
+tutex allocateed unsuccessfully
+x allocated unsuccessfully
+Waiting for 7 process
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mummutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutetex allocated unsuccessfully
+mutex allocated unsuccessfully
+utex allocated unsuccessfully
+mutex allmutex allocated unsuccessfully
+x allocated unsuccessfully
+mutex allocated unsuccessfully
+muocated unsuccessfully
+mutex allocated unsuccessfully
+mtex allocated unsuccessfully
+utex allocated unsuccessfully
+Waiting for 8 process
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfulmumutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mmutex allocated unsuccessfully
+mutex allocated unsuccessfully
+ly
+utex allocated unsuccesmutex allocatemutex allocated unsuccessfully
+mutex allocated unsuccessfully
+tex allocated unsuccessfulmmsldfully
+ unsuccessfully
+y
+uuttex allocated unsuccessfully
+ex allocated unsuccessfully
+Waiting for 9 process
+mmmuutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+tex allocated unsuccessfully
+utex allocated unsuccessfully
+mutexmutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfull allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mmumy
+ututex allocated unsuccessfully
+ex allocated unstex allocated unsuccessfully
+uccessfully
+Waiting for 10 process
+mutex allocated mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfmutex allocated unsuccessfully
+uumutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfullylmutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocamutex allocated unsuccessfully
+
+nsuccessfully
+ted unsuccessfully
+mmlutex allocated unsuccessfutex allocated unsuccessfully
+yu
+lly
+Waitmutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+allocated unsuccessfully
+mutex allocamutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+ing for 11 process
+mted unsuccessfully
+utex allocated unsuccessfully
+Waitimutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mmumutex allocated unsuccesmutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+mmutex allocated unsuccessfully
+tex allocated unsuccessfully
+mutex allocated unsuccessfully
+sfully
+nutex allocated unsuccessfully
+utex allocated unsuccessfully
+mutex allocated unsuccessfully
+g fomutex allocated unsuccessfully
+r 12 process
+mutex allocated unsuccessfully
+Waiting for 13 process
+mutex allocated unsuccessfully
+mutex allocated unsuccessfully
+unexpected trap 13 from cpu 3 eip 801060d0 (cr2=0x0)
+lapicid 3: panic: trap
+ 801064d4 801060cc 0 0 0 0 0 0 0 0

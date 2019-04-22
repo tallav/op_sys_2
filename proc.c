@@ -328,7 +328,7 @@ exit(void)
   curproc->cwd = 0;
 
   acquire(&ptable.lock);
-
+  //wakeup1(curthread);
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
 
@@ -374,15 +374,21 @@ wait(void)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
+        //pid = p->pid;
         // clean all the process threads
         int hasNonTerminated = 0;
         for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+          //if(t->state != UNINIT)
+          //  if(t->state != TERMINATED){
+          //    cprintf("thread id: %d, thread state: %d, proc state: %d\n", t->tid, t->state,p->state);
+          //    panic("wait panic: not ZOMBIE or UNUSED");
+          //  }
           if(t->state == TERMINATED){
             kfree(t->kstack);
             t->kstack = 0;
             t->tid = 0;
             t->tproc = 0;
-            t->exitRequest = 0;
+            //t->exitRequest = 0;
             t->state = UNINIT;
           }else{
             if(t != mythread() && t->state != UNINIT)
