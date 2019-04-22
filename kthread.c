@@ -126,7 +126,6 @@ int kthread_join(int thread_id){
         cprintf("join on my thread id\n");
         return -1;
     }
-
     acquire(&ptable.lock);
     // look for the thread with this id
     for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
@@ -150,34 +149,4 @@ int kthread_join(int thread_id){
     t->state = UNINIT;
     release(&ptable.lock);
     return 0;
-}
-
-// Wake up all threads sleeping on chan.
-// The ptable lock must be held.
-static void
-wakeupThreads1(void *chan)
-{
-  //cprintf("entered wakeup1: process=%p, thread=%p\n", myproc(), mythread());
-  struct proc *p;
-  struct kthread *t;
-
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->state == UNUSED){
-      continue;
-    }
-    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
-      if(t->state == BLOCKED && t->chan == chan){
-        t->state = RUNNABLE;
-      }
-    }
-  }
-}
-
-// Wake up all processes sleeping on chan.
-void
-wakeupThreads(void *chan)
-{
-  acquire(&ptable.lock);
-  wakeupThreads1(chan);
-  release(&ptable.lock);
 }

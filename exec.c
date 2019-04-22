@@ -42,7 +42,6 @@ exec(char *path, char **argv)
     acquire(&ptable.lock);
     struct kthread *t;
     for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
-      //cprintf("exec: thread %d state %d\n", t->tid, t->state);
       if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
         t->exitRequest = 1;
       }
@@ -57,7 +56,6 @@ exec(char *path, char **argv)
   while(!allTerminated){
     int hasNonTerminated = 0;
     for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
-      //cprintf("exec: thread %d state %d\n", t->tid, t->state);
       if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
         hasNonTerminated = 1;
         t->exitRequest = 1;

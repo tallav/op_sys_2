@@ -398,20 +398,10 @@ wait(void)
         // clean all the process threads
         int hasNonTerminated = 0;
         for(t = p->threads; t < &p->threads[NTHREAD]; t++){
-          /*if(t->state == TERMINATED){
-            kfree(t->kstack);
-            t->kstack = 0;
-            t->tid = 0;
-            t->tproc = 0;
-            t->exitRequest = 0;
-            t->state = UNINIT;
-          }else{*/
-            if(t != mythread() && t->state != UNINIT && t->state != TERMINATED){
-              hasNonTerminated = 1;
-            }
+          if(t != mythread() && t->state != UNINIT && t->state != TERMINATED){
+            hasNonTerminated = 1;
+          }
         }
-        //procdump();
-        //cprintf("hasNonTerminated = %d\n", hasNonTerminated);
         if(!hasNonTerminated){
           // Found one.
           pid = p->pid;
