@@ -19,4 +19,6 @@ struct kthread_mutex_t{
 };
 
 void create_tree(struct tree_node* node, int depth);
-int deleteTree(struct tree_node *node);
+void print_node(struct tree_node *n,int l);
+void print_tree(struct trnmnt_tree *t);
+int delete_node(struct tree_node *node);

@@ -35,59 +35,49 @@ void create_tree(struct tree_node* node, int depth){
     create_tree(right, depth-1);
     return;
 }
-/*
-static void print_tree(struct tree_node *node){
-    if (node != 0){
-        print_tree(node->left_child); 
-        printf(1, "Node : %d, ", node->mutex_id); 
-        if (node->parent == 0) 
-            printf(1, "Parent : NULL \n"); 
-        else
-            printf(1, "Parent : %d \n", node->parent->mutex_id); 
-        print_tree(node->right_child); 
-    }
-}
-*/
-static void print_tree(struct tree_node *r,int l){
-	int i;
-	if(!r) return ;
-	print_tree(r->right_child,l+1);
+
+void print_node(struct tree_node *n,int l){
+	if(!n) return;
+    int i;
+	print_node(n->right_child,l+1);
 	for(i=0;i<l;++i){
 		printf(1,"  ");
     }
-	printf(1,"%d \n",r->mutex_id);
-	print_tree(r->left_child,l+1);
+	printf(1,"%d \n",n->mutex_id);
+	print_node(n->left_child,l+1);
 }
 
-int deleteTree(struct tree_node *node){
+void print_tree(struct trnmnt_tree *t){
+    if(!t) return;
+	print_node(t->root,0);
+}
+
+int delete_node(struct tree_node *node){
     if (node != 0){ 
         if(kthread_mutex_dealloc(node->mutex_id) < 0){
             printf(1, "mutex dealloc failed\n");
             return -1;
         }
-
-        /* first delete both subtrees */
-        deleteTree(node->left_child); 
-        deleteTree(node->right_child); 
-        
-        /* then delete the node */
+        // first delete both subtrees
+        delete_node(node->left_child); 
+        delete_node(node->right_child); 
+        node->left_child = 0;
+        node->right_child = 0;
+        // then delete the node
         printf(1, "Deleting node: %d\n", node->mutex_id); 
         free(node); 
-        if(node == 0)
-            printf(1, "free node\n");
     }
     return 0;
 }
 
 int trnmnt_tree_dealloc(struct trnmnt_tree* tree){
-    if(deleteTree(tree->root) == 0){
-        if(tree->root == 0)
-            printf(1,"free tree\n");
+    if(delete_node(tree->root) == 0){
+        tree->root = 0;
         free(tree);
         return 0;
-        
-    }else
+    }else{
         return -1;
+    }
 }
 
 int trnmnt_tree_acquire(struct trnmnt_tree* tree,int ID){
@@ -102,8 +92,8 @@ int
 main(int argc, char *argv[])
 {
     struct trnmnt_tree *tree = trnmnt_tree_alloc(3);
-    print_tree(tree->root, 0);
+    print_tree(tree);
     trnmnt_tree_dealloc(tree);
-    print_tree(tree->root, 0);
+    print_tree(tree);
     exit();
 }
