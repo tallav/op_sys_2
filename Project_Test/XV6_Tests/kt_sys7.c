@@ -8,7 +8,7 @@
 #include "../../traps.h"
 #include "../../memlayout.h"
 
-#define NUM_PROC 61
+#define NUM_PROC 20
 #define STACK_SIZE 500
 
 int execute(char * command, char** args);
