@@ -44,6 +44,7 @@ int kthread_create(void (*start_func)(), void* stack){
 
     t->tproc = p;
     t->tid = nexttid++;
+
     release(&ptable.lock);  
 
     // Allocate kernel stack for the thread.
@@ -117,7 +118,7 @@ void kthread_exit(){
 }
 
 int kthread_join(int thread_id){
-    cprintf("entered kthread_join with thread_id: %d\n", thread_id);
+    //cprintf("entered kthread_join with thread_id: %d\n", thread_id);
     struct proc *curproc = myproc();
     struct kthread *curthread = mythread();
     struct kthread *t;
@@ -132,7 +133,7 @@ int kthread_join(int thread_id){
             break;
         }
     }
-    if (t == 0){ // thread not found
+    if (t == 0 || (t->tid!=thread_id)){ // thread not found
         release(&ptable.lock);
         return -1;
     }
@@ -141,6 +142,7 @@ int kthread_join(int thread_id){
         return -1;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
+       // cprintf("thread %d sleeping and waiting for %d wakeup, the thread state is: %d \n",curthread->tid, thread_id,t->state);
         sleep(t, &ptable.lock);
     }
     kfree(t->kstack);

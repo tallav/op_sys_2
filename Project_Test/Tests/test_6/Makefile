@@ -169,7 +169,8 @@ mkfs: mkfs.c fs.h
 
 UPROGS=\
 	_quitXV6\
-	_mutex2\
+	_kt_sys5\
+	_creThreads\
 	_sh\
 	_init\
 	_ls\
@@ -244,7 +245,7 @@ qemu-nox-gdb: fs.img xv6.img .gdbinit
 EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
-	printf.c umalloc.c myprog.c tree.c\
+	printf.c umalloc.c myprog.c tree.c myprog2.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 
@@ -284,11 +285,17 @@ _quitXV6: $(ULIB)
 	objdump -S _quitXV6 > quitXV6.asm
 	$(OBJDUMP) -t _quitXV6 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > quitXV6.sym
 
-_mutex2: $(ULIB)
-	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o mutex2.o ./Project_Test/XV6_Tests/mutex2.c
-	ld -m elf_i386 -N -e main -Ttext 0 -o _mutex2 mutex2.o $(ULIB)
-	objdump -S _mutex2 > mutex2.asm
-	$(OBJDUMP) -t _mutex2 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > mutex2.sym
+_kt_sys5: $(ULIB)
+	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o kt_sys5.o ./Project_Test/XV6_Tests/kt_sys5.c
+	ld -m elf_i386 -N -e main -Ttext 0 -o _kt_sys5 kt_sys5.o $(ULIB)
+	objdump -S _kt_sys5 > kt_sys5.asm
+	$(OBJDUMP) -t _kt_sys5 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kt_sys5.sym
+
+_creThreads: $(ULIB)
+	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o creThreads.o ./Project_Test/XV6_Tests/creThreads.c
+	ld -m elf_i386 -N -e main -Ttext 0 -o _creThreads creThreads.o $(ULIB)
+	objdump -S _creThreads > creThreads.asm
+	$(OBJDUMP) -t _creThreads | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > creThreads.sym
 
 _sh: $(ULIB)
 	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o sh.o sh.c

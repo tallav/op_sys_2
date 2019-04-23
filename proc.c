@@ -547,7 +547,7 @@ forkret(void)
 void
 sleep(void *chan, struct spinlock *lk)
 {
-  //cprintf("entered sleep: process=%p, thread=%p\n", myproc(), mythread());
+  //cprintf("entered sleep: process=%p, thread=%d\n", myproc(), mythread()->tid);
   struct kthread *t = mythread();
   
   if(t == 0)
@@ -619,7 +619,7 @@ wakeup(void *chan)
 int
 kill(int pid)
 {
-  //cprintf("entered kill: process=%p, thread=%p\n", myproc(), mythread());
+  cprintf("entered kill: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *p;
 
   acquire(&ptable.lock);
