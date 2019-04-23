@@ -83,7 +83,7 @@ int kthread_id(){
 }
 
 void kthread_exit(){
-    //cprintf("entered kthread_exit thread=%d\n", mythread()->tid);
+    cprintf("entered kthread_exit thread=%d\n", mythread()->tid);
     struct kthread *curthread = mythread();
     struct proc *threadProc;
     struct kthread *t;
@@ -103,6 +103,8 @@ void kthread_exit(){
         exit();
     }
     
+    cprintf("not last running");
+
     curthread->tproc = 0;
     curthread->exitRequest = 0;
     curthread->tf = 0;

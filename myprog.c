@@ -273,9 +273,9 @@ main(int argc, char *argv[])
 {
     //test_kthread_create();
 	//test1();
-	//for (int i=0; i<50; i++)
-    //	mutexTest();
+	for (int i=0; i<200; i++)
+    	mutexTest();
 	//threadTest1();
-	threadTest3();
+	//threadTest3();
     exit();
 }

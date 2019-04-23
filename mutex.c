@@ -14,6 +14,7 @@ struct kthread_mutex_t{
   int locked; // value 1 if it's locked
   int tid; // thread id of the locking thread
   int used; // lock alredy allocated
+  int waitingThreads; // counts the number of threads that waits for this mutex
 };
 
 struct mutexTable {
@@ -34,6 +35,7 @@ int kthread_mutex_alloc(){
             mutex->locked = 0;
             mutex->tid = 0;
             mutex->used = 1;
+            mutex->waitingThreads = 0;
             //cprintf("mutex allocated %d, max mutexts %d\n", mutex->id,MAX_MUTEXES);
             break;
         }
@@ -66,6 +68,7 @@ int kthread_mutex_dealloc(int mutex_id){
                 mutex->locked = 0;
                 mutex->tid = 0;
                 mutex->used = 0;
+                mutex->waitingThreads = 0;
                 release(&mutexTable.lock);
                 return 0;
             }
@@ -80,7 +83,7 @@ int kthread_mutex_dealloc(int mutex_id){
     return -1; // mutex_id does not exist
 }
 
-int waitingCount=0;
+
 int kthread_mutex_lock(int mutex_id){
     struct kthread_mutex_t *mutex;
     acquire(&mutexTable.lock);
@@ -103,18 +106,18 @@ int kthread_mutex_lock(int mutex_id){
     //cprintf("kthread_mutex_lock, thread with id: %d entered\n", curthread->tid);
     acquire(&mutex->lock);
     if (mutex->tid != curthread->tid){
-            waitingCount+=1;
+            mutex->waitingThreads+=1;
     }
     while (mutex->locked) {
        // cprintf("sleep and wait to hold the mutex lock, sleep on tid: %d\n", curthread->tid);
         sleep(&mutex->tid, &mutex->lock);
     }
-    cprintf("kthread_mutex_lock, thread with id: %d trying to lock the mutex\n", curthread->tid);
+    cprintf("kthread_mutex_lock, thread with id: %d trying to lock the mutex id: %d , mutex tid: %d\n", curthread->tid,mutex->id,mutex->tid);
     if(mutex->locked == 0){
-        cprintf("waiting count: %d \n", waitingCount);
          if (mutex->tid != curthread->tid )
-            waitingCount-=1;
-        if (mutex->tid != curthread->tid || (mutex->tid == curthread->tid && waitingCount == 0)){
+            mutex->waitingThreads-=1;
+        cprintf("waiting count: %d \n",  mutex->waitingThreads);
+        if (mutex->tid != curthread->tid || (mutex->tid == curthread->tid && mutex->waitingThreads == 0)){
             cprintf("thread %d locking the mutex with id: %d\n", curthread->tid,mutex_id);
             mutex->locked = 1;
             mutex->tid = curthread->tid;
@@ -139,22 +142,22 @@ int kthread_mutex_unlock(int mutex_id){
     }
     struct kthread *curthread = mythread();
     if(curthread->tid != mutex->tid){ 
-        //cprintf("thread is not holding the lock\n");
+        cprintf("thread is not holding the lock\n");
         return -1;
     }
 
  
-    //cprintf("req mutex id: %d, found mutex id: %d, is mutex locked: %d, mutex->isUsed: %d, mutex tid: %d, cur thread: %d \n", mutex_id, mutex->id, mutex->locked, mutex->used,mutex->tid,curthread->tid);
+    cprintf("req mutex id: %d, found mutex id: %d, is mutex locked: %d, mutex->isUsed: %d, mutex tid: %d, cur thread: %d \n", mutex_id, mutex->id, mutex->locked, mutex->used,mutex->tid,curthread->tid);
     acquire(&mutex->lock);
        if (mutex->locked == 0){
-      //     cprintf("--mutex unlocked, mutex id: %d \n",mutex->id);
+           cprintf("--mutex unlocked, mutex id: %d \n",mutex->id);
             release(&mutex->lock);
             return -1;
        }
     mutex->locked = 0;
     //mutex->tid = 0;
     release(&mutex->lock);
-    //cprintf("wakeup threads sleeping on curthread id: %d, mutex state: %d \n",curthread->tid, mutex->locked);
+    cprintf("wakeup threads sleeping on curthread id: %d, mutex state: %d \n",curthread->tid, mutex->locked);
     wakeup(&mutex->tid);
     return 0;
 }
