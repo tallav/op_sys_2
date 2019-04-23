@@ -11,13 +11,11 @@
 struct threadTable{
   struct kthread threads[NTHREAD]; // Thread table for every process
 };
-
 struct ptable {
   struct spinlock lock;
   struct proc proc[NPROC];
   struct threadTable ttable[NPROC]; // Table of all threads
 };
-
 struct ptable ptable;
 
 struct kthread_mutex_t{
@@ -27,13 +25,11 @@ struct kthread_mutex_t{
   int tid; // thread id of the locking thread
   int used; // lock alredy allocated
 };
-
 struct mutexTable {
   struct spinlock lock;
   struct kthread_mutex_t mutexes[MAX_MUTEXES];
 };
-
-extern struct mutexTable mutexTable;
+struct mutexTable mutexTable;
 
 static struct proc *initproc;
 
@@ -321,11 +317,10 @@ exit(void)
       t->exitRequest = 1;
   }
   
-  /* terminate the current thread
-  curthread->tproc = 0;
+  //terminate the current thread
+  /*curthread->tproc = 0;
   curthread->exitRequest = 0;
-  curthread->tf = 0;
-  wakeup1(curthread);*/
+  curthread->tf = 0;*/
   
   // check if it is the last running thread. if it is, the process execute exit();
   int lastRunning = 1;
@@ -363,6 +358,9 @@ exit(void)
       }
     }
 
+    // wake up thread that sleeping in curthread before it terminates
+    wakeup1(curthread);
+
     // Jump into the scheduler, never to return.
     curproc->state = ZOMBIE;
     curthread->state = TERMINATED;
@@ -394,9 +392,18 @@ wait(void)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
-        // clean all the process threads
+        // check if the process threads are terminated
         int hasNonTerminated = 0;
         for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+          // clean all the process threads
+          if(t->state == TERMINATED){
+            kfree(t->kstack);
+            t->kstack = 0;
+            t->tid = 0;
+            t->tproc = 0;
+            t->exitRequest = 0;
+            t->state = UNINIT;
+          }
           if(t != mythread() && t->state != UNINIT && t->state != TERMINATED){
             hasNonTerminated = 1;
           }
@@ -410,6 +417,9 @@ wait(void)
           p->name[0] = 0;
           p->killed = 0;
           p->state = UNUSED;
+          for(int i = 0; i < MAX_MUTEXES; i++){
+            kthread_mutex_dealloc(mutexTable.mutexes[i].id);
+          }
         }
         release(&ptable.lock);
         return pid;
@@ -547,7 +557,6 @@ forkret(void)
 void
 sleep(void *chan, struct spinlock *lk)
 {
-  //cprintf("entered sleep: process=%p, thread=%p\n", myproc(), mythread());
   struct kthread *t = mythread();
   
   if(t == 0)
@@ -566,6 +575,9 @@ sleep(void *chan, struct spinlock *lk)
     acquire(&ptable.lock);  //DOC: sleeplock1
     release(lk);
   }
+  
+  //cprintf("entered sleep: chan=%p, thread=%p\n", chan, t->tid);
+
   // Go to sleep.
   t->chan = chan;
   t->state = SLEEPING;
@@ -588,7 +600,6 @@ sleep(void *chan, struct spinlock *lk)
 static void
 wakeup1(void *chan)
 {
-  //cprintf("entered wakeup1: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *p;
   struct kthread *t;
 

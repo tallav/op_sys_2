@@ -96,7 +96,7 @@ printer()
 	printf(1,"Error: returned from exit !!");
 }
 
-int 
+void 
 mutexTest()
 {
 	printf(1,"~~~~~~~~~~~~~~~~~~\ntest starts\nIf it ends without Errors you win! : )\n~~~~~~~~~~~~~~~~~~\n");
@@ -105,7 +105,7 @@ mutexTest()
 	printf(1,"the mutex: %d\n",mutex);
 	if(mutex<0)
 		printf(1,"Error: mutex didnt alloc! (%d)\n",mutex);
-	for(i = 0; i<5; i++){
+	for(i = 0; i<20; i++){
         printf(1,"index: %d\n",i);
 		test=0;
 		input = kthread_mutex_lock(mutex);
@@ -114,7 +114,7 @@ mutexTest()
 		char* stack = malloc(MAX_STACK_SIZE);
 		int tid = kthread_create ((void*)printer, stack);
 		if(tid<0) printf(1,"Thread wasnt created correctly! (%d)\n",tid);
-		printf(1,"joining on thread %d\n",tid);
+		//printf(1,"joining on thread %d\n",tid);
 		if(test)printf(1,"Error: mutex didnt prevent writing!\n");
 		input = kthread_mutex_unlock(mutex);
 		if(input<0) printf(1,"Error: mutex didnt unlock!\n");
@@ -126,8 +126,8 @@ mutexTest()
 	input = kthread_mutex_dealloc(mutex);
 	if(input<0)
 		printf(1,"Error: mutex didnt dealloc!\n");
-	exit();
-    printf(1,"Error: returned from exit !!\n");
+	//exit();
+    //printf(1,"Error: returned from exit !!\n");
 }
 
 int THREAD_NUM = 5;
@@ -174,6 +174,7 @@ main(int argc, char *argv[])
 {
     //test_kthread_create();
 	//test1();
-    mutexTest();
+	for(int i=0; i<20; i++)
+    	mutexTest();
     exit();
 }

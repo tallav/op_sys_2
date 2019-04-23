@@ -118,6 +118,7 @@ int trnmnt_tree_acquire(struct trnmnt_tree* tree,int ID){
 }
 
 int trnmnt_tree_release(struct trnmnt_tree* tree,int ID){
+
     return 0;
 }
 
@@ -140,20 +141,26 @@ struct tree_node* find_leaf(struct tree_node* node, int ID){
     }
 } 
 
+struct trnmnt_tree *tree;
+int i;
+
+void tryAcquireMutex(){
+    trnmnt_tree_acquire(tree, i);
+    kthread_exit();
+}
+
 int
 main(int argc, char *argv[])
 {
-    struct trnmnt_tree *tree = trnmnt_tree_alloc(3);
+    tree = trnmnt_tree_alloc(4);
     print_tree(tree);
-    //struct tree_node* leaf = find_leaf(tree->root, 5);
-    //printf(1, "leaf id = %d\n", leaf->index);
-    /*
-    char* stack1 =  (char*)malloc(MAX_STACK_SIZE);
-    char* stack2 =  (char*)malloc(MAX_STACK_SIZE);
-    int tid1 = kthread_create(trnmnt_tree_acquire(tree), 0), stack1);
-    int tid2 = kthread_create(trnmnt_tree_acquire(tree), 0), stack2);
-    */
-    trnmnt_tree_dealloc(tree);
-    print_tree(tree);
+    i = 1;
+    void* stack1 = (char*)(malloc(4000*sizeof(char))) + 4000;
+    int tid1 = kthread_create(tryAcquireMutex, stack1);
+    kthread_join(tid1);
+    /*i = 2;
+    void* stack2 = (char*)(malloc(4000*sizeof(char))) + 4000;
+    int tid2 = kthread_create(tryAcquireMutex, stack2);
+    kthread_join(tid2);*/
     exit();
 }

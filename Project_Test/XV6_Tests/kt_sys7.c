@@ -8,7 +8,7 @@
 #include "../../traps.h"
 #include "../../memlayout.h"
 
-#define NUM_PROC 20
+#define NUM_PROC 61
 #define STACK_SIZE 500
 
 int execute(char * command, char** args);
@@ -16,7 +16,7 @@ void createProcess();
 
 int main(int argc, char *argv[]){
     
-    for(int i = 0;i < 10;i++){
+    for(int i = 0;i < 3;i++){
         createProcess();
         sleep(1000);
     }
