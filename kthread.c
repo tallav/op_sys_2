@@ -11,19 +11,18 @@
 struct threadTable{
   struct kthread threads[NTHREAD]; // Thread table for every process
 };
-
 struct ptable{
   struct spinlock lock;
   struct proc proc[NPROC];
   struct threadTable ttable[NPROC]; // Table of all threads
 };
 extern struct ptable ptable;
+
 extern int nexttid;
 extern void trapret(void);
 extern void forkret(void);
 
 int kthread_create(void (*start_func)(), void* stack){
-    //cprintf("entered kthread_create\n");
     struct proc *p = myproc();
     struct kthread *t = 0;
     char *sp;
@@ -73,7 +72,6 @@ int kthread_create(void (*start_func)(), void* stack){
     *t->tf = *mythread()->tf;
     t->tf->eip = (uint)start_func;
     t->tf->esp = (uint)(stack);
-    //cprintf("thread created tid=%d\n", t->tid);
     return t->tid;
 }
 
@@ -83,7 +81,6 @@ int kthread_id(){
 }
 
 void kthread_exit(){
-    cprintf("entered kthread_exit thread=%d\n", mythread()->tid);
     struct kthread *curthread = mythread();
     struct proc *threadProc;
     struct kthread *t;
@@ -103,29 +100,22 @@ void kthread_exit(){
         exit();
     }
     
-    cprintf("not last running");
-
-    curthread->tproc = 0;
-    curthread->exitRequest = 0;
-    curthread->tf = 0;
-    
     release(&ptable.lock);
     wakeup(curthread);
     acquire(&ptable.lock);
 
     // Jump into the scheduler, never to return.
     curthread->state = TERMINATED;
+    cprintf("thread %d exiting\n", mythread()->tid);
     sched();
     panic("terminated exit");
 }
 
 int kthread_join(int thread_id){
-    //cprintf("entered kthread_join with thread_id: %d\n", thread_id);
     struct proc *curproc = myproc();
     struct kthread *curthread = mythread();
     struct kthread *t;
     if(curthread->tid == thread_id){
-        cprintf("join on my thread id\n");
         return -1;
     }
     acquire(&ptable.lock);
@@ -135,7 +125,7 @@ int kthread_join(int thread_id){
             break;
         }
     }
-    if (t == 0 || (t->tid!=thread_id)){ // thread not found
+    if (t == 0 || t->tid != thread_id){ // thread not found
         release(&ptable.lock);
         return -1;
     }
@@ -144,12 +134,13 @@ int kthread_join(int thread_id){
         return -1;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
-       // cprintf("thread %d sleeping and waiting for %d wakeup, the thread state is: %d \n",curthread->tid, thread_id,t->state);
+        cprintf("------thread %d going to sleep on thread %d\n", mythread()->tid, t->tid);
         sleep(t, &ptable.lock);
     }
     kfree(t->kstack);
     t->kstack = 0;
     t->state = UNINIT;
+    cprintf("thread %d joining on thread %d\n", mythread()->tid, thread_id);
     release(&ptable.lock);
     return 0;
 }

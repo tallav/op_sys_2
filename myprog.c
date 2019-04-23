@@ -96,7 +96,7 @@ printer()
 	printf(1,"Error: returned from exit !!");
 }
 
-int 
+void 
 mutexTest()
 {
 	printf(1,"~~~~~~~~~~~~~~~~~~\ntest starts\nIf it ends without Errors you win! : )\n~~~~~~~~~~~~~~~~~~\n");
@@ -115,7 +115,7 @@ mutexTest()
 		int tid = kthread_create ((void*)printer, stack);
 		printf(1, "created thread with id: %d\n", tid);
 		if(tid<0) printf(1,"Thread wasnt created correctly! (%d)\n",tid);
-		printf(1,"joining on thread %d\n",tid);
+		//printf(1,"joining on thread %d\n",tid);
 		if(test)printf(1,"Error: mutex didnt prevent writing!\n");
 		input = kthread_mutex_unlock(mutex);
 		if(input<0) printf(1,"Error: mutex didnt unlock!\n");
@@ -127,8 +127,8 @@ mutexTest()
 	input = kthread_mutex_dealloc(mutex);
 	if(input<0)
 		printf(1,"Error: mutex didnt dealloc!\n");
-	exit();
-    printf(1,"Error: returned from exit !!\n");
+	//exit();
+    //printf(1,"Error: returned from exit !!\n");
 }
 
 int THREAD_NUM = 5;
@@ -171,14 +171,12 @@ void test1(){
 }
 
 
-void * print_id(void)
+void print_id(void)
 {
 	printf(1,"Thread id is: %d\n",kthread_id());
-	
 	sleep(1000);
 	printf(1,"Thread is exiting.\n");
 	kthread_exit();
-	return (void *) 1;
 }
 
 void threadTest1(){
@@ -187,7 +185,6 @@ void threadTest1(){
 	void* stack2 = (void*)malloc(4000);	
 	
 	tid1=kthread_create((void*)print_id,stack1);
-	
 	tid2=kthread_create((void*)print_id,stack2);
 	
 	kthread_join(tid1);
@@ -249,24 +246,17 @@ void threadTest3(){
   if (kthread_join(tid) < 0) {
     printf(2, "join error\n");
   }
- 
   printf(1, "Joining %d\n", tid1);
   if (kthread_join(tid1) < 0) {
     printf(2, "join error\n");
   }
- 
- 
   printf(1, "Joining %d\n", tid2);
   if (kthread_join(tid2) < 0) {
     printf(2, "join error\n");
   }
- 
- 
   printf(1, "\nAll threads done!\n");
- 
   exit();
 }
-
 
 int
 main(int argc, char *argv[])
