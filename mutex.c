@@ -72,49 +72,75 @@ int kthread_mutex_dealloc(int mutex_id){
     return -1; // mutex_id does not exist
 }
 
+int waitingCount = 0;
+
 int kthread_mutex_lock(int mutex_id){
+    cprintf("thread %d trying to lock mutex %d\n", mythread()->tid, mutex_id);
     struct kthread_mutex_t *mutex;
+    // find the mutex with this mutex_id
     acquire(&mutexTable.lock);
     for(mutex = mutexTable.mutexes; mutex < &mutexTable.mutexes[MAX_MUTEXES]; mutex++){
         if(mutex->id == mutex_id)
             break;
     }
     release(&mutexTable.lock);
-    if(mutex == 0 || mutex->id != mutex_id){
+    if(mutex == 0 || mutex->id != mutex_id){ // mutex_id was not found
+        return -1;
+    }
+    if(mutex->used == 0){ // mutex is not allocated
         return -1;
     }
     struct kthread *curthread = mythread();
     acquire(&mutex->lock);
-    while(mutex->locked) {
+    /*if (mutex->tid != curthread->tid){
+        waitingCount+=1;
+    }*/
+    while (mutex->locked) { // wait for the lock to be unlocked
+        cprintf("------thread %d going to sleep on mutex %d\n", mythread()->tid, mutex->id);
         sleep(&mutex->tid, &mutex->lock);
     }
-    if(mutex->tid != curthread->tid && mutex->locked == 0){
-        mutex->locked = 1;
-        mutex->tid = curthread->tid;
+    if(mutex->locked == 0){ // catch the free lock
+        /*if (mutex->tid != curthread->tid ){
+            waitingCount-=1;
+        }*/
+        //if (mutex->tid != curthread->tid || (mutex->tid == curthread->tid && waitingCount == 0)){
+        if (mutex->tid != curthread->tid){ // lock only if you are not the previouse thread who locked
+            cprintf("thread %d locking the mutex %d\n", mythread()->tid, mutex->id);
+            mutex->locked = 1;
+            mutex->tid = curthread->tid;
+        }
     }
     release(&mutex->lock);
     return 0;
 }
 
 int kthread_mutex_unlock(int mutex_id){
+    cprintf("thread %d trying to unlock mutex %d\n", mythread()->tid, mutex_id);
     struct kthread_mutex_t *mutex;
+    // find the mutex with this mutex_id
     acquire(&mutexTable.lock);
     for(mutex = mutexTable.mutexes; mutex < &mutexTable.mutexes[MAX_MUTEXES]; mutex++){
         if(mutex->id == mutex_id)
             break;
     }
     release(&mutexTable.lock);
-    if(mutex == 0 || mutex->id != mutex_id){
+    if(mutex == 0 || mutex->id != mutex_id){ // mutex_id was not found
         return -1;
     }
     struct kthread *curthread = mythread();
-    if(curthread->tid != mutex->tid){ 
+    if(curthread->tid != mutex->tid){ // this thread is not holding the lock
         return -1;
     }
     acquire(&mutex->lock);
-    mutex->locked = 0;
+    if (mutex->locked == 0){ // mutex is not locked
+        release(&mutex->lock);
+        return -1;
+    }
+    cprintf("thread %d unlocking the mutex %d\n", mythread()->tid, mutex->id);
+    mutex->locked = 0; // release the mutex
     //mutex->tid = 0;
     release(&mutex->lock);
     wakeup(&mutex->tid);
+    cprintf("wake up threads sleeping on mutex %d\n", mutex->id);
     return 0;
 }

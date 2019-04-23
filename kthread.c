@@ -43,6 +43,7 @@ int kthread_create(void (*start_func)(), void* stack){
 
     t->tproc = p;
     t->tid = nexttid++;
+
     release(&ptable.lock);  
 
     // Allocate kernel stack for the thread.
@@ -105,6 +106,7 @@ void kthread_exit(){
 
     // Jump into the scheduler, never to return.
     curthread->state = TERMINATED;
+    cprintf("thread %d exiting\n", mythread()->tid);
     sched();
     panic("terminated exit");
 }
@@ -132,11 +134,13 @@ int kthread_join(int thread_id){
         return -1;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
+        cprintf("------thread %d going to sleep on thread %d\n", mythread()->tid, t->tid);
         sleep(t, &ptable.lock);
     }
     kfree(t->kstack);
     t->kstack = 0;
     t->state = UNINIT;
+    cprintf("thread %d joining on thread %d\n", mythread()->tid, thread_id);
     release(&ptable.lock);
     return 0;
 }

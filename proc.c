@@ -630,7 +630,7 @@ wakeup(void *chan)
 int
 kill(int pid)
 {
-  //cprintf("entered kill: process=%p, thread=%p\n", myproc(), mythread());
+  cprintf("entered kill: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *p;
 
   acquire(&ptable.lock);
