@@ -9,12 +9,20 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "tournament_tree.h"
-
+#include "kthread.h"
+/*
+extern trnmnt_tree* trnmnt_tree_alloc(int depth);
+extern int trnmnt_tree_dealloc(trnmnt_tree* tree);
+extern int trnmnt_tree_acquire(trnmnt_tree* tree,int ID);
+extern int trnmnt_tree_release(trnmnt_tree* tree,int ID);
+*/
 int* level_index;
+int treeDepth = 0;
 
-struct trnmnt_tree* trnmnt_tree_alloc(int depth){
-    struct trnmnt_tree *tree = malloc(sizeof(struct trnmnt_tree));
+trnmnt_tree* trnmnt_tree_alloc(int depth){
+    trnmnt_tree *tree = malloc(sizeof(trnmnt_tree));
     struct tree_node *root = malloc(sizeof(struct tree_node));
+    treeDepth = depth;
     tree->depth = depth;
     tree->root = root;
     root->parent = 0;
@@ -34,9 +42,9 @@ void create_tree(struct tree_node* node, int depth){
         return;
     }
     if(curLevel != depth-2){
-            index = level_index[depth-1];
-            curLevel = depth-2;
-        }
+        index = level_index[depth-1];
+        curLevel = depth-2;
+    }
     node->level = curLevel;
     node->index = index;
     index++;
@@ -44,6 +52,8 @@ void create_tree(struct tree_node* node, int depth){
     if(depth == 1){
         node->left_child = 0;
         node->right_child = 0;
+        struct tree_node* nodeArr[treeDepth-1];
+        node->lockPath = nodeArr;
     }else{
         struct tree_node *left = malloc(sizeof(struct tree_node));
         struct tree_node *right = malloc(sizeof(struct tree_node));
@@ -69,7 +79,7 @@ void print_node(struct tree_node *n,int l){
 	print_node(n->left_child,l+1);
 }
 
-void print_tree(struct trnmnt_tree *t){
+void print_tree(trnmnt_tree *t){
     if(!t) return;
 	print_node(t->root,0);
 }
@@ -85,6 +95,8 @@ int delete_node(struct tree_node *node){
         delete_node(node->right_child); 
         node->left_child = 0;
         node->right_child = 0;
+        if(node->lockPath)
+            node->lockPath = 0;
         // then delete the node
         printf(1, "Deleting node: %d\n", node->mutex_id); 
         free(node); 
@@ -92,7 +104,7 @@ int delete_node(struct tree_node *node){
     return 0;
 }
 
-int trnmnt_tree_dealloc(struct trnmnt_tree* tree){
+int trnmnt_tree_dealloc(trnmnt_tree* tree){
     if(delete_node(tree->root) == 0){
         tree->root = 0;
         free(tree);
@@ -102,23 +114,36 @@ int trnmnt_tree_dealloc(struct trnmnt_tree* tree){
     }
 }
 
-int trnmnt_tree_acquire(struct trnmnt_tree* tree,int ID){
+int trnmnt_tree_acquire(trnmnt_tree* tree,int ID){
     struct tree_node* leaf = find_leaf(tree->root, ID);
-    while(leaf->parent){
-        int mutexID = leaf->parent->mutex_id;
+    struct tree_node* curNode = leaf;
+    while(curNode->parent){
+        int mutexID = curNode->parent->mutex_id;
+        int level = curNode->parent->level;
         int mutex_lock = kthread_mutex_lock(mutexID);
+        leaf->lockPath[level] = curNode->parent;
+        printf(1, "level=%d, mutex_id=%d, index=%d\n", level, leaf->lockPath[level]->mutex_id, leaf->lockPath[level]->index);
         if(mutex_lock == -1){
             return -1;
         }
         if(mutex_lock == 0){
-            leaf = leaf->parent;
+            curNode = curNode->parent;
         }
     }
     return 0;
 }
 
-int trnmnt_tree_release(struct trnmnt_tree* tree,int ID){
-
+int trnmnt_tree_release(trnmnt_tree* tree,int ID){
+    struct tree_node* leaf = find_leaf(tree->root, ID);
+    for(int i = treeDepth-2; i >= 0; i--){
+        struct tree_node *curNode = leaf->lockPath[i];
+        int res = kthread_mutex_unlock(curNode->mutex_id);
+        printf(1, "mutex_id=%d, res=%d\n", curNode->mutex_id, res);
+        if(res == -1){
+            return -1;
+        }
+        leaf->lockPath[i] = 0;
+    }
     return 0;
 }
 
@@ -141,26 +166,40 @@ struct tree_node* find_leaf(struct tree_node* node, int ID){
     }
 } 
 
-struct trnmnt_tree *tree;
-int i;
+trnmnt_tree *tree;
+int i = 0;
 
 void tryAcquireMutex(){
-    trnmnt_tree_acquire(tree, i);
-    kthread_exit();
+    if (i==0){
+        i++;
+        trnmnt_tree_acquire(tree, 4);
+        sleep(i*100);
+        trnmnt_tree_release(tree, 4);
+        kthread_exit();
+    }
+    else{
+        trnmnt_tree_acquire(tree, 5);
+        sleep(i*100);
+        trnmnt_tree_release(tree, 5);
+        kthread_exit();
+    }
 }
-
+/*
 int
 main(int argc, char *argv[])
 {
     tree = trnmnt_tree_alloc(4);
     print_tree(tree);
-    i = 1;
+
     void* stack1 = (char*)(malloc(4000*sizeof(char))) + 4000;
     int tid1 = kthread_create(tryAcquireMutex, stack1);
-    kthread_join(tid1);
-    /*i = 2;
+    
     void* stack2 = (char*)(malloc(4000*sizeof(char))) + 4000;
     int tid2 = kthread_create(tryAcquireMutex, stack2);
-    kthread_join(tid2);*/
+
+    kthread_join(tid1);
+    kthread_join(tid2);
+    
     exit();
 }
+*/

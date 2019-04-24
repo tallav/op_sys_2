@@ -21,6 +21,7 @@ extern struct ptable ptable;
 extern int nexttid;
 extern void trapret(void);
 extern void forkret(void);
+static void wakeupThreads(void *chan);
 
 int kthread_create(void (*start_func)(), void* stack){
     struct proc *p = myproc();
@@ -100,13 +101,14 @@ void kthread_exit(){
         exit();
     }
     
-    release(&ptable.lock);
-    wakeup(curthread);
-    acquire(&ptable.lock);
+    //release(&ptable.lock);
+    wakeupThreads(curthread);
+    //cprintf("wake up threads sleeping on thread %d\n", curthread->tid);
+    //acquire(&ptable.lock);
 
     // Jump into the scheduler, never to return.
     curthread->state = TERMINATED;
-    cprintf("thread %d exiting\n", mythread()->tid);
+    //cprintf("thread %d exiting\n", mythread()->tid);
     sched();
     panic("terminated exit");
 }
@@ -134,13 +136,31 @@ int kthread_join(int thread_id){
         return -1;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
-        cprintf("------thread %d going to sleep on thread %d\n", mythread()->tid, t->tid);
+        //cprintf("------thread %d going to sleep on thread %d with state %d\n", mythread()->tid, t->tid, t->state);
         sleep(t, &ptable.lock);
     }
     kfree(t->kstack);
     t->kstack = 0;
     t->state = UNINIT;
-    cprintf("thread %d joining on thread %d\n", mythread()->tid, thread_id);
+    //cprintf("thread %d joining on thread %d\n", mythread()->tid, thread_id);
     release(&ptable.lock);
     return 0;
+}
+
+static void
+wakeupThreads(void *chan)
+{
+  struct proc *p;
+  struct kthread *t;
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED){
+      continue;
+    }
+    for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+      if(t->state == SLEEPING && t->chan == chan){
+        t->state = RUNNABLE;
+      }
+    }
+  }
 }

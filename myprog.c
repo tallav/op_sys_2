@@ -9,75 +9,6 @@
 #include "memlayout.h"
 #include "kthread.h"
 
-/*
-int a = 4;
-
-int printSomthing(){
-    printf(1,"\n HELLO \n");
-    a = 2;
-    kthread_exit();
-    return 0;
-}
-
-void test_kthread_create(){
-    char* ustack = (char*)malloc(4000);
-    printf(1, "a=%d\n",a);
-    int tid = kthread_create((void*)&printSomthing, ustack);
-    sleep(50);
-    free(ustack);
-    printf(1, "created thread %d\n", tid);
-    printf(1, "a=%d\n",a);
-    return;
-}
-
-void test_kthread_exit(){
-    int tid = kthread_id();
-    printf(1, "thread id: %d\n", tid);
-    kthread_exit();
-    return;
-}
-
-void test_kthread_join(){
-    int pid = fork();
-    int tid = -1;
-    if(pid == 0){
-        tid = kthread_id();
-        printf(1, "child tid: %d\n", tid);
-        kthread_exit();
-    }
-    wait();
-    printf(1, "parent tid: %d\n", tid);
-    kthread_join(tid);
-    return;
-}
-
-void
-run(){
-	int id = kthread_id();
-	int pid = getpid();
-	printf(1, "my id: %d\n", id);
-	printf(1,"my pid: %d\n", pid);
-    int i, j;
-    for(i=0; i<1000;i++)
-		for(j=0; j<1000;j++)
-			id++;
-	printf(1,"hey\n");
-	kthread_exit();
-}
-
-int
-Test()
-{
-	void* stack = (void*)malloc(4000);
-	int pid = getpid();
-	printf(1, "main pid: %d\n",pid);
-	int tid = kthread_create(&run, stack);
-	int rest = kthread_join(tid);
-	printf(1, "tid: %d, rest: %d\n", tid, rest);
-    kthread_id();
-	exit();
-}
-*/
 int mutex;
 int test;
 
@@ -96,6 +27,8 @@ printer()
 	printf(1,"Error: returned from exit !!");
 }
 
+#define STACK_SIZE 500
+
 void 
 mutexTest()
 {
@@ -105,15 +38,14 @@ mutexTest()
 	printf(1,"the mutex: %d\n",mutex);
 	if(mutex<0)
 		printf(1,"Error: mutex didnt alloc! (%d)\n",mutex);
-	for(i = 0; i<16; i++){
+	for(i = 0; i<20; i++){
         printf(1,"index: %d\n",i);
 		test=0;
 		input = kthread_mutex_lock(mutex);
-		if(input<0)
-			printf(1,"Error: mutex didnt lock! (%d)\n",input);
-		char* stack = malloc(MAX_STACK_SIZE);
+		if(input<0) printf(1,"Error: mutex didnt lock! (%d)\n",input);
+		char* stack =  ((char *) malloc(STACK_SIZE * sizeof(char))) + STACK_SIZE;
 		int tid = kthread_create ((void*)printer, stack);
-		printf(1, "created thread with id: %d\n", tid);
+		printf(1, "process id=%d, created thread with id: %d\n", tid);
 		if(tid<0) printf(1,"Thread wasnt created correctly! (%d)\n",tid);
 		//printf(1,"joining on thread %d\n",tid);
 		if(test)printf(1,"Error: mutex didnt prevent writing!\n");
@@ -131,30 +63,7 @@ mutexTest()
     //printf(1,"Error: returned from exit !!\n");
 }
 
-int THREAD_NUM = 5;
-
 void run(){
-	int id = kthread_id(); 
-	printf(1,"thread %d entering\n", id); 
-	sleep(id*100);
-	printf(1,"thread %d exiting\n", id); 
-	kthread_exit(); 
-}
-
-void test_kthread_create(){
-	void* threads_stacks[THREAD_NUM];
-	for(int i = 0; i < THREAD_NUM; i++){
-		char* ustack = (char*)malloc(MAX_STACK_SIZE);
-		threads_stacks[i] = ustack;
-	}
-    for(int i = 0; i < THREAD_NUM; i++){
-        kthread_create(run, threads_stacks[i]);
-    }
-	sleep(1000);
-    exit();
-}
-
-void run1(){
 	int id = kthread_id();
 	printf(1, "my id: %d\n", id);
 	sleep(id*100);
@@ -162,14 +71,15 @@ void run1(){
 	kthread_exit();
 }
 
-void test1(){
-	void* stack = (void*)malloc(MAX_STACK_SIZE);
-	int tid = kthread_create(run1, stack);
+void threadTest(){
+	void* stack = (void*)malloc(4000);
+	int pid = getpid();
+	printf(1, "%d\n",pid);
+	int tid = kthread_create((void*)run, stack);
 	int res = kthread_join(tid);
 	printf(1, "result: %d, tid: %d\n", res, tid);
-	exit();
+	//exit();
 }
-
 
 void print_id(void)
 {
@@ -193,14 +103,14 @@ void threadTest1(){
 	printf(1,"Got id : %d \n",tid2);
 	printf(1,"Finished.\n");
 	sleep(500);
-	kthread_exit();
+	//exit();
 }
 
-void* printBLABLA()
+void printBLABLA()
 {
 	printf(1,"blabla.\n");
 	sleep(500);
-	exit();
+	kthread_exit();
 }
 
 void threadTest2(){
@@ -213,17 +123,16 @@ void threadTest2(){
 	printf(1,"tid2 is: %d.\n",tid2);
 	printf(1,"pid: %d.\n",getpid());*/
 	sleep(500);
-	exit();
+	//exit();
 }
 
-void* printme() {
+void printme() {
   printf(1,"Thread %d running !\n", kthread_id());
   kthread_exit();
-  return 0;
 }
 
 void threadTest3(){
-	 uint *stack, *stack1, *stack2;
+  uint *stack, *stack1, *stack2;
   int tid, tid1, tid2;
   int MAX_STACK = 4000;
  
@@ -255,20 +164,29 @@ void threadTest3(){
     printf(2, "join error\n");
   }
   printf(1, "\nAll threads done!\n");
-  exit();
+  //exit();
 }
 
 int
 main(int argc, char *argv[])
 {
-    //test_kthread_create();
-	//test1();
-	for(int i = 0; i < 200; i++){
+	for(int i = 0; i < 2; i++){
 		printf(1, "loop - %d\n", i);
     	mutexTest();
 	}
-	//threadTest1();
-	//threadTest2();
-	//threadTest3();
+	/*
+	for(int i = 0 ; i < 10; i++){
+		threadTest();
+	}
+	for(int i = 0 ; i < 10; i++){
+		threadTest1();
+	}
+	for(int i = 0 ; i < 10; i++){
+		threadTest2();
+	}
+	for(int i = 0 ; i < 10; i++){
+		threadTest3();
+	}
+	*/
     exit();
 }

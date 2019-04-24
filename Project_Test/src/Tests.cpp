@@ -1759,7 +1759,7 @@ $ $ Finished Yehonatan Peleg Test, quiting...
     vector<string> test_8_UserPrograms = {"quitXV6","kt_sys7","cThreW16T"};
     string test_8_Hint = "Problem with exit when other threads are alive and running, exiting dosen't leave the system in "
                          "consistent state.";
-    int test_8_time_limit = 1260000; //420000;
+    int test_8_time_limit = 420000;
 
     string test_9_Input = R"V0G0N(
 kt_sys8
@@ -2277,7 +2277,7 @@ $ $ Finished Yehonatan Peleg Test, quiting...
     vector<string> test_15_UserPrograms = {"quitXV6","mutex2"};
     string test_15_Hint = "Problem with mutex allocation deallocation, allocating a lot of mutexes in different " 
                           "proccesses without explicitly deallocating shouldn't prevent new mutexes to be allocated";
-    int test_15_time_limit = 1000000; //240000;
+    int test_15_time_limit = 240000;
 
     string test_16_Input = R"V0G0N(
 mutex3
