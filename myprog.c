@@ -170,7 +170,7 @@ void threadTest3(){
 int
 main(int argc, char *argv[])
 {
-	for(int i = 0; i < 2; i++){
+	for(int i = 0; i < 200; i++){
 		printf(1, "loop - %d\n", i);
     	mutexTest();
 	}

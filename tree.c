@@ -10,12 +10,7 @@
 #include "spinlock.h"
 #include "tournament_tree.h"
 #include "kthread.h"
-/*
-extern trnmnt_tree* trnmnt_tree_alloc(int depth);
-extern int trnmnt_tree_dealloc(trnmnt_tree* tree);
-extern int trnmnt_tree_acquire(trnmnt_tree* tree,int ID);
-extern int trnmnt_tree_release(trnmnt_tree* tree,int ID);
-*/
+
 int* level_index;
 int treeDepth = 0;
 
@@ -184,7 +179,7 @@ void tryAcquireMutex(){
         kthread_exit();
     }
 }
-/*
+
 int
 main(int argc, char *argv[])
 {
@@ -202,4 +197,3 @@ main(int argc, char *argv[])
     
     exit();
 }
-*/
