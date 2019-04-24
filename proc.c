@@ -311,21 +311,13 @@ exit(void)
     panic("init exiting");
 
   acquire(&ptable.lock);
-  // tell the process threads to exit
-  for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
-    if(t->state != UNINIT && t->state != TERMINATED)
-      t->exitRequest = 1;
-  }
   
-  //terminate the current thread
-  /*curthread->tproc = 0;
-  curthread->exitRequest = 0;
-  curthread->tf = 0;*/
-  
-  // check if it is the last running thread. if it is, the process execute exit();
+  // check if it is the last running thread. if it is, the process execute exit().
+  // if it isn't tell the process threads to exit.
   int lastRunning = 1;
   for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
       if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
+          t->exitRequest = 1;
           lastRunning = 0;
       }
   }
@@ -417,9 +409,6 @@ wait(void)
           p->name[0] = 0;
           p->killed = 0;
           p->state = UNUSED;
-          for(int i = 0; i < MAX_MUTEXES; i++){
-            kthread_mutex_dealloc(mutexTable.mutexes[i].id);
-          }
         }
         release(&ptable.lock);
         return pid;

@@ -45,7 +45,7 @@ mutexTest()
 		if(input<0) printf(1,"Error: mutex didnt lock! (%d)\n",input);
 		char* stack =  ((char *) malloc(STACK_SIZE * sizeof(char))) + STACK_SIZE;
 		int tid = kthread_create ((void*)printer, stack);
-		printf(1, "process id=%d, created thread with id: %d\n", tid);
+		printf(1, "process id=%d, created thread with id: %d\n", getpid(), tid);
 		if(tid<0) printf(1,"Thread wasnt created correctly! (%d)\n",tid);
 		//printf(1,"joining on thread %d\n",tid);
 		if(test)printf(1,"Error: mutex didnt prevent writing!\n");
@@ -170,7 +170,7 @@ void threadTest3(){
 int
 main(int argc, char *argv[])
 {
-	for(int i = 0; i < 200; i++){
+	for(int i = 0; i < 2; i++){
 		printf(1, "loop - %d\n", i);
     	mutexTest();
 	}
