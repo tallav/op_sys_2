@@ -10,11 +10,14 @@ struct tree_node{
     int mutex_id;
     int index; 
     int level;
-    struct tree_node **lockPath;
+    //struct tree_node **lockPath;
+    int *lockPath;
 };
+
+typedef struct trnmnt_tree trnmnt_tree;
 
 void create_tree(struct tree_node* node, int depth);
 void print_node(struct tree_node *n,int l);
-void print_tree(struct trnmnt_tree *t);
+void print_tree(trnmnt_tree *t);
 int delete_node(struct tree_node *node);
 struct tree_node* find_leaf(struct tree_node* node, int ID);

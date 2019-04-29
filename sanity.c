@@ -243,7 +243,8 @@ void test_tree1(){
         if(tree == 0){ 
             printf(1,"1 trnmnt_tree allocated unsuccessfully\n"); 
         } 
-
+        print_tree(tree);
+        printf(1, "\n--------------------------------\n");
         result = trnmnt_tree_dealloc(tree); 
         if(result == 0){}
         else if(result == -1){ 
@@ -253,6 +254,48 @@ void test_tree1(){
             printf(1,"unkown return code from trnmnt_tree_dealloc\n"); 
         } 
     }
+    exit();
+}
+
+void test_tree2(){
+    int result;
+    trnmnt_tree* tree;
+    
+    int depth;
+    for(depth = 1; depth < 5; depth++){
+        tree = trnmnt_tree_alloc(depth); 
+        if(tree == 0){ 
+            printf(1,"trnmnt_tree allocated unsuccessfully\n"); 
+        } 
+        print_tree(tree);
+
+        int maxIndex = (2^depth)-1;
+        printf(1, "maxIndex=%d\n", maxIndex);
+        for(int index = 0; index < maxIndex; index++){
+            result = trnmnt_tree_acquire(tree, index); 
+            if(result == 0){  
+                printf(1,"trnmnt_tree locked - depth=%d , index=%d\n", depth, index); 
+            }else if(result == -1){  
+                printf(1,"trnmnt_tree locked unsuccessfully - depth=%d , index=%d\n", depth, index); 
+            }else{
+                printf(1,"unkown return code from trnmnt_tree_acquire\n"); 
+            }
+            result = trnmnt_tree_release(tree, index); 
+            if(result == 0){  
+                printf(1,"trnmnt_tree unlocked - depth=%d , index=%d\n", depth, index); 
+            }else if(result == -1){  
+                printf(1,"trnmnt_tree unlocked unsuccessfully - depth=%d , index=%d\n", depth, index); 
+            }else{
+                printf(1,"unkown return code from trnmnt_tree_release\n"); 
+            }
+        }
+
+        result = trnmnt_tree_dealloc(tree); 
+        if(result == -1){ 
+            printf(1,"trnmnt_tree deallocated unsuccessfully\n"); 
+        } 
+    }
+
     exit();
 }
 
@@ -277,6 +320,8 @@ main(int argc, char *argv[])
         test_mutex2(15);
     if(test_num == 6)
         test_tree1();
-    
+    if(test_num == 7)
+        test_tree2();
+
     exit();
 }

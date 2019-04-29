@@ -92,20 +92,6 @@ int main(int argc, char *argv[]){
         }
     }
 
-    
-    for(int i = 0;i < THREAD_NUM;i++){
-        int result = kthread_join(pids[i]);
-        if(result == 0){
-            printf(1,"Thread %d shouldn't be my thread anymore\n",i+1);
-        }
-        else if(result == -1){
-            printf(1,"Thread %d isn't my thread anymore, as it should be\n",i+1);
-        }
-        else{
-            printf(1,"Unknown result code from join\n");
-        }
-    }    
-
     exit();
 }
 

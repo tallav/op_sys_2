@@ -76,7 +76,6 @@ int kthread_mutex_dealloc(int mutex_id){
     return -1; // mutex_id does not exist
 }
 
-
 int kthread_mutex_lock(int mutex_id){
     //cprintf("thread %d trying to lock mutex %d\n", mythread()->tid, mutex_id);
     struct kthread_mutex_t *mutex;

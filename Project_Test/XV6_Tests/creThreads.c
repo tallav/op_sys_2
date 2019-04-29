@@ -16,8 +16,6 @@
 #define THREAD_START(name, id) \
     void name(){ \
         sleep( id * 100); \
-        printf(1,"thread %d entering\n", id ); \
-        printf(1,"thread %d exiting\n", id ); \
         kthread_exit(); \
     }
 
@@ -108,7 +106,6 @@ void initiateExecTest(){
     for(int i = 0;i < THREAD_NUM;i++){
         printf(1,"Creating thread %d\n",i+1);
         kthreadCreateFlag = kthread_create(threads_starts[i], threads_stacks[i]);
-        printf(1,"process %d creating thread %d\n", getpid(), kthreadCreateFlag);
         if(kthreadCreateFlag >= 0){
             printf(1,"Finished creating thread %d successfully\n",i+1);
         }

@@ -16,7 +16,7 @@ void createProcess();
 
 int main(int argc, char *argv[]){
     
-    for(int i = 0;i < 3;i++){
+    for(int i = 0;i < 10;i++){
         createProcess();
         sleep(1000);
     }
