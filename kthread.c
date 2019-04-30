@@ -136,7 +136,7 @@ int kthread_join(int thread_id){
         return -1;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
-        //cprintf("------thread %d going to sleep on thread %d with state %d\n", mythread()->tid, t->tid, t->state);
+        //cprintf("kthread_join------thread %d going to sleep on thread %d with state %d\n", mythread()->tid, t->tid, t->state);
         sleep(t, &ptable.lock);
     }
     kfree(t->kstack);

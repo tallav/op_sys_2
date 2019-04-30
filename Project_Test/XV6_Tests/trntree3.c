@@ -68,6 +68,12 @@ void threadStart_2(){
     result = trnmnt_tree_dealloc(tree); 
     if(result == -1){ 
         printf(1,"7 trnmnt_tree deallocated unsuccessfully\n"); 
+    }else if(result == 0){
+        tree = 0;
+        printf(1,"7 trnmnt_tree deallocated successfully\n");
+    }
+    else{
+        printf(1,"Unknown result code from trnmnt_tree_dealloc\n");
     }
 
     kthread_exit(); 

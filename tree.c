@@ -98,6 +98,7 @@ int trnmnt_tree_dealloc(trnmnt_tree* tree){
     if(delete_node(tree->root) == 0){
         tree->root = 0;
         free(tree);
+        tree = 0;
         return 0;
     }else{
         return -1;
@@ -121,19 +122,11 @@ int trnmnt_tree_acquire(trnmnt_tree* tree,int ID){
             curNode = curNode->parent;
         }
     }
-    /*
-    for(int i = 0; i < treeDepth; i++){
-        printf(1,"lockPath[%d] = %d\n", i,leaf->lockPath[i]);
-    }*/
     return 0;
 }
 
 int trnmnt_tree_release(trnmnt_tree* tree,int ID){
     struct tree_node* leaf = find_leaf(tree->root, ID);
-    /*
-    for(int i = 0; i < treeDepth; i++){
-        printf(1,"lockPath[%d] = %d\n", i,leaf->lockPath[i]);
-    }*/
     for(int i = treeDepth-1; i >= 0; i--){
         //struct tree_node *curNode = leaf->lockPath[i];
         //int res = kthread_mutex_unlock(curNode->mutex_id);
