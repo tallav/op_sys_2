@@ -138,13 +138,7 @@ found:
   t->exitRequest = 0;
 
   release(&ptable.lock);
-  /*
-  // Allocate kernel stack for the process.
-  if((p->kstack = kalloc()) == 0){
-    p->state = UNUSED;
-    return 0;
-  }
-  */
+ 
   // Allocate kernel stack for the thread.
   if((t->kstack = kalloc()) == 0){
     return 0;
@@ -184,7 +178,6 @@ userinit(void)
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
-  // TODO: lock on sz
   p->sz = PGSIZE;
   t = p->threads;
   memset(t->tf, 0, sizeof(*t->tf));
@@ -218,7 +211,6 @@ growproc(int n)
 {
   uint sz;
   struct proc *curproc = myproc();
-  // TODO: lock the ptable or create new lock  
   acquire(&ptable.lock);
   sz = curproc->sz;
   if(n > 0){
@@ -267,7 +259,6 @@ fork(void)
     nt->state = UNINIT;
     return -1;
   }
-  // TODO: lock on pgdir and sz
   np->sz = curproc->sz;
   np->parent = curproc;
   *nt->tf = *curthread->tf;
@@ -359,13 +350,6 @@ exit(void)
     // Jump into the scheduler, never to return.
     curproc->state = ZOMBIE;
     curthread->state = TERMINATED;
-
-    // kfree(curthread->kstack);
-    // curthread->kstack = 0;
-    // curthread->tid = 0;
-    // curthread->tproc = 0;
-    // curthread->exitRequest = 0;
-    // curthread->state = UNINIT;
 
     sched();
     panic("zombie exit");
@@ -469,10 +453,6 @@ scheduler(void)
             continue;
         }
         
-        /*
-        if(p && t)
-          cprintf("scheduler found runnable: process=%d, thread=%d\n", p->pid, t->tid);
-        */
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -512,10 +492,8 @@ sched(void)
     panic("sched ptable.lock");
   if(mycpu()->ncli != 1)
     panic("sched locks");
-  if(t->state == RUNNING){
-    cprintf("sched thread=%d\n", t->tid);
+  if(t->state == RUNNING)
     panic("sched running");
-  }
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = mycpu()->intena;
@@ -640,9 +618,6 @@ kill(int pid)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
-      // Wake process from sleep if necessary.
-      /*if(p->state == SLEEPING)
-        p->state = RUNNABLE;*/
       release(&ptable.lock);
       return 0;
     }

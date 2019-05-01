@@ -101,10 +101,8 @@ void kthread_exit(){
         exit();
     }
     
-    //release(&ptable.lock);
     wakeupThreads(curthread);
     //cprintf("wake up threads sleeping on thread %d\n", curthread->tid);
-    //acquire(&ptable.lock);
 
     // Jump into the scheduler, never to return.
     curthread->state = TERMINATED;
@@ -136,7 +134,7 @@ int kthread_join(int thread_id){
         return -1;
     }
     while (t->state != TERMINATED){ // thread is not finished yet
-        //cprintf("------thread %d going to sleep on thread %d with state %d\n", mythread()->tid, t->tid, t->state);
+        //cprintf("kthread_join------thread %d going to sleep on thread %d with state %d\n", mythread()->tid, t->tid, t->state);
         sleep(t, &ptable.lock);
     }
     kfree(t->kstack);
@@ -165,7 +163,7 @@ wakeupThreads(void *chan)
   }
 }
 
-
+/*
 void
 waitForRunnableThreads(){
   struct proc *curproc = myproc();
@@ -196,3 +194,4 @@ waitForRunnableThreads(){
     release(&ptable.lock);
   }
 }
+*/

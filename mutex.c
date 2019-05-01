@@ -76,7 +76,6 @@ int kthread_mutex_dealloc(int mutex_id){
     return -1; // mutex_id does not exist
 }
 
-
 int kthread_mutex_lock(int mutex_id){
     //cprintf("thread %d trying to lock mutex %d\n", mythread()->tid, mutex_id);
     struct kthread_mutex_t *mutex;
@@ -99,7 +98,7 @@ int kthread_mutex_lock(int mutex_id){
             mutex->waitingThreads+=1;
     }
     while (mutex->locked) { // wait for the lock to be unlocked
-        //cprintf("------thread %d going to sleep on mutex %d\n", mythread()->tid, mutex->id);
+        //cprintf("mutex_lock------thread %d going to sleep on mutex %d\n", mythread()->tid, mutex->id);
         sleep(&mutex->tid, &mutex->lock);
     }
     if(mutex->locked == 0){ // catch the free lock
