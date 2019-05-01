@@ -33,6 +33,12 @@ exec(char *path, char **argv)
   struct proc *curproc = myproc();
   struct kthread *curthread = mythread();
 
+
+ // cprintf("exec cur thread %d \n",curthread->tid );
+  //if (curthread->exitRequest == 0)
+    //waitForRunnableThreads();
+
+
   // check if you got exit request before executing
   if(curthread->exitRequest == 1){
     kthread_exit();
@@ -47,25 +53,7 @@ exec(char *path, char **argv)
     }
     release(&ptable.lock);
   }
-  /*
-  acquire(&ptable.lock);
-  struct kthread *t;
-  int allTerminated = 0;
-  // wait until the other threads in the process are terminated before executing
-  while(!allTerminated){
-    int hasNonTerminated = 0;
-    for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
-      if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
-        hasNonTerminated = 1;
-        t->exitRequest = 1;
-      }
-    }
-    if(!hasNonTerminated){
-      allTerminated = 1;
-    }
-  }
-  release(&ptable.lock);
-  */
+  
   begin_op();
 
   if((ip = namei(path)) == 0){

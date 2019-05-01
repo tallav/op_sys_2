@@ -10,7 +10,16 @@
 #include "tournament_tree.h"
 #include "kthread.h"
 
-int findPower(int base,int power);
+
+
+// power calculation
+int findPower(int base, int power) {
+   if (power == 0)
+      return 1;
+   else
+      return (base * findPower(base, power-1));
+}  
+
 
 // thread code in test_kthread1 and test_kthread2
 void run1(){ 
@@ -270,6 +279,79 @@ void test_mutex2(int threadsNum){
     exit();
 }
 
+int mutexId;
+int isThreadRunning;
+int res;
+
+ void test_mutex3_helper()
+ {
+ 	int funcInput = kthread_mutex_lock(mutexId);
+ 	if(funcInput<0){
+ 		printf(1,"ERROR: thread mutex didnt lock!");
+        res = 0;
+     }
+ 	printf(1,"thread %d running func\n",kthread_id());
+ 	isThreadRunning=1;
+	funcInput = kthread_mutex_unlock(mutexId);
+ 	if(funcInput<0){
+        printf(1,"ERROR: thread mutex didnt unlock!");
+        res = 0;
+     }
+    	
+ 	kthread_exit();
+ 	printf(1,"ERROR: returned from exit !!");
+    res = 0;
+ }
+
+// Test threads behavior while using mutexes, and also mutex functions.
+ void test_mutex3()
+ {
+    int res = 1;
+ 	int funcInput;
+ 	mutexId = kthread_mutex_alloc();
+ 	if(mutexId<0){
+         printf(1,"ERROR: mutex %d didnt alloc! \n",mutexId);
+         res = 0;
+     }
+ 	for(int i = 0; i<20; i++){
+ 		isThreadRunning=0;
+ 		funcInput = kthread_mutex_lock(mutexId);
+ 		char* stack =  ((char *) malloc(MAX_STACK_SIZE * sizeof(char))) + MAX_STACK_SIZE;
+ 		int tid = kthread_create ((void*)test_mutex3_helper, stack);
+ 		if(tid<0){
+             printf(1,"ERROR: Thread wasnt created correctly %d\n",tid);
+             res = 0;
+         }
+ 		if(isThreadRunning){
+             printf(1,"ERROR: mutex didnt prevent writing!\n");
+             res =0;
+        }
+ 		funcInput = kthread_mutex_unlock(mutexId);
+ 		if(funcInput<0){
+            printf(1,"ERROR: mutex didnt unlock!\n");
+            res = 0;
+         }
+ 		kthread_join(tid);
+ 		if(!isThreadRunning){
+              printf(1,"ERROR: thread didnt run!\n");
+              res = 0;
+         }
+ 	}
+ 	funcInput = kthread_mutex_dealloc(mutexId);
+ 	if(funcInput<0){
+        printf(1,"ERROR: mutex didnt dealloc!\n");
+        res = 0;
+    }
+
+ 	if (res == 1){
+         printf(1, "Test passed!");
+    }else{
+        printf(1, "Test failed.. :(");
+    }
+    exit();
+ }
+
+
 // allocates turnament tree with several depthes and prints them
 void test_tree1(){
     int result;
@@ -453,12 +535,10 @@ main(int argc, char *argv[])
         test_kthread2(10);
     if(test_num == 3)
         test_kthread3(16);
-    // TODO: not an intresting test
     if(test_num == 4)
         test_mutex1(5, run2);
     if(test_num == 5)
         test_mutex1(2, run3);
-    // TODO: test_mutex2 not creating the first thread???
     if(test_num == 6)
         test_mutex2(4);
     if(test_num == 7)
@@ -469,14 +549,8 @@ main(int argc, char *argv[])
         test_tree3(run6, run7);
     if(test_num == 10)
         test_tree3(run6, run6);
+    if (test_num == 11)
+        test_mutex3(3);
 
     exit();
 }
-
-// power calculation
-int findPower(int base, int power) {
-   if (power == 0)
-      return 1;
-   else
-      return (base * findPower(base, power-1));
-}  
