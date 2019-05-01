@@ -103,9 +103,9 @@ sys_kthread_create(void)
 {
   void* start_func;
   void* stack;
-
-  if ((argptr(0, (char**)(&start_func), sizeof(int)) < 0) || (argptr(1, (char**)(&stack), sizeof(int)) < 0))
+  if ((argptr(0, (char**)(&start_func), sizeof(int)) < 0) || (argptr(1, (char**)(&stack), sizeof(int)) < 0)){
     return -1;
+  }
   return kthread_create(start_func,stack);
 }
 

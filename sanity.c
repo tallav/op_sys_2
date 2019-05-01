@@ -10,6 +10,8 @@
 #include "tournament_tree.h"
 #include "kthread.h"
 
+#define TEMP_STACK_SIZE 500
+
 // power calculation
 int findPower(int base, int power) {
    if (power == 0)
@@ -22,21 +24,26 @@ int findPower(int base, int power) {
 void run1(){ 
     int id = kthread_id();
     sleep(id * 100); 
-    printf(1,"thread %d entering\n", id); 
-    printf(1,"thread %d exiting\n", id); 
+    printf(1,"thread %d start\n", id); 
+    printf(1,"thread %d finish\n", id); 
     kthread_exit(); 
 }
 
 // general test for kthread
 void test_kthread1(int threadsNum){
     void* stacks[threadsNum];
+    int tids[threadsNum];
     for(int i = 0; i < threadsNum; i++){
-        stacks[i] = ((char*) malloc(500*sizeof(char))) + 500;
-        kthread_create(run1, stacks[i]);
-        sleep(10);
+        stacks[i] = ((char*) malloc(TEMP_STACK_SIZE*sizeof(char))) + TEMP_STACK_SIZE;
+        tids[i] = kthread_create(run1, stacks[i]);
     }
 
-    sleep(2000);
+    for(int i = 0;i < threadsNum;i++){
+        int result = kthread_join(tids[i]);
+        if(result == -1){
+            printf(1,"Error - join thread %d\n",tids[i]);
+        }
+    }
     
     for(int i = 0; i < threadsNum; i++){
         free(stacks[i]);
@@ -49,16 +56,15 @@ void test_kthread1(int threadsNum){
 // test for kthread_create and kthread_join
 // should not be able to join the second time
 void test_kthread2(int threadsNum){
-    void* stacks[threadsNum];
+    char* stacks[threadsNum];
     int tids[threadsNum];
     for(int i = 0;i < threadsNum;i++){
-        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
-        stacks[i] = stack;
-        tids[i] = kthread_create(run1, stack);
-        sleep(10);
+        stacks[i] = ((char*) malloc(TEMP_STACK_SIZE*sizeof(char))) + TEMP_STACK_SIZE;
+        tids[i] = kthread_create(run1, stacks[i]);
     }
 
     for(int i = 0;i < threadsNum;i++){
+        printf(1,"trying to join thread %d first time\n",tids[i]);
         int result = kthread_join(tids[i]);
         if(result == 0){
             printf(1,"OK - join thread %d\n",tids[i]);
@@ -67,15 +73,17 @@ void test_kthread2(int threadsNum){
             printf(1,"Error - join thread %d\n",tids[i]);
         }
     }
+    
     sleep(1000);
+    
     for(int i = 0;i < threadsNum;i++){
-        printf(1,"trying to join thread %d\n",tids[i]);
+        printf(1,"trying to join thread %d second time\n",tids[i]);
         int result = kthread_join(tids[i]);
         if(result == 0){
             printf(1,"Error - join thread %d\n",tids[i]);
         }
         if(result == -1){
-            printf(1,"OK - join thread %d\n",tids[i]);
+            printf(1,"OK - did not join thread %d\n",tids[i]);
         }
     }    
 
@@ -83,6 +91,7 @@ void test_kthread2(int threadsNum){
         free(stacks[i]);
         stacks[i] = 0;
     }
+    
     exit();
 }
 
@@ -98,8 +107,7 @@ void test_kthread3(int threadsNum){
     void* stacks[threadsNum];
     int tids[threadsNum];
     for(int i = 0;i < threadsNum;i++){
-        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
-        stacks[i] = stack;
+        stacks[i] = ((char*) malloc(TEMP_STACK_SIZE*sizeof(char))) + TEMP_STACK_SIZE;
         tids[i] = kthread_create(run5, stacks[i]);
         if(tids[i] < 0){
             printf(1,"create thread %d failed\n",i+2);
@@ -107,21 +115,21 @@ void test_kthread3(int threadsNum){
             printf(1,"create thread %d succeed\n",i+2);
         }
     }
+    
     sleep(1000);
+    
     for(int i = 0;i < threadsNum-1;i++){
-        printf(1,"trying to join thread %d\n",tids[i]);
         int result = kthread_join(tids[i]);
-        if(result == 0){
-            printf(1,"OK - join thread %d\n",tids[i]);
-        }
         if(result == -1){
             printf(1,"Error - join thread %d\n",tids[i]);
         }
     }
+    
     for(int i = 0; i < threadsNum; i++){
         free(stacks[i]);
         stacks[i] = 0;
     }
+    
     exit();
 }
 
@@ -151,6 +159,7 @@ void run2(){
     if(result == -1){
         printf(1,"Error - mutex unlock, mid=%d\n", mid); 
     }
+    /*
     result = kthread_mutex_dealloc(mid); 
     if(result == 0){ 
         printf(1,"OK - mutex deallocate, mid=%d\n", mid); 
@@ -158,6 +167,7 @@ void run2(){
     if(result == -1){ 
         printf(1,"Error - mutex deallocate, mid=%d\n", mid); 
     } 
+    */
     kthread_exit(); 
 }
 
@@ -166,7 +176,7 @@ void run2(){
 void run3(){ 
     int mid; 
     int result; 
-    for(int i = 0;i < 10;i++){ 
+    for(int i = 0;i < 5;i++){ 
         mid = kthread_mutex_alloc(); 
         if(mid < 0){ 
             printf(1,"Error - mutex allocate\n"); 
@@ -176,7 +186,7 @@ void run3(){
         }
         result = kthread_mutex_dealloc(mid); 
         if(result == 0){ 
-            printf(1,"OK - mutex deallocate\n"); 
+            printf(1,"OK - mutex deallocate first time\n"); 
         } 
         if(result == -1){ 
             printf(1,"Error - mutex deallocate\n"); 
@@ -186,7 +196,7 @@ void run3(){
         printf(1,"Error - mutex deallocate (mutex already deallocated)\n"); 
         } 
         if(result == -1){ 
-            printf(1,"OK - mutex deallocate\n"); 
+            printf(1,"OK - mutex did not deallocate seconed time\n"); 
         } 
     } 
     kthread_exit(); 
@@ -196,18 +206,13 @@ void test_mutex1(int threadsNum, void (*func)()){
     void* stacks[threadsNum];
     int tids[threadsNum];
     for(int i = 0;i < threadsNum;i++){
-        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
-        stacks[i] = stack;
-        tids[i] = kthread_create(func, stack);
+        stacks[i] = ((char*) malloc(TEMP_STACK_SIZE*sizeof(char))) + TEMP_STACK_SIZE;
+        tids[i] = kthread_create(func, stacks[i]);
         sleep(100);
     }
     
     for(int i = 0;i < threadsNum;i++){
-        printf(1,"trying to join thread %d\n",tids[i]);
         int result = kthread_join(tids[i]);
-        if(result == 0){
-            printf(1,"OK - join thread %d\n",tids[i]);
-        }
         if(result == -1){
             printf(1,"Error - join thread %d\n",tids[i]);
         }
@@ -217,6 +222,7 @@ void test_mutex1(int threadsNum, void (*func)()){
         free(stacks[i]);
         stacks[i] = 0;
     }
+    
     exit();
 }
 
@@ -256,13 +262,11 @@ void test_mutex2(int threadsNum){
         printf(1,"mutex allocated unsuccessfully\n"); 
     } 
     for(int i = 0;i < threadsNum;i++){
-        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
-        stacks[i] = stack;
-        tids[i] = kthread_create(run4, stack);
+        stacks[i] = ((char*) malloc(TEMP_STACK_SIZE*sizeof(char))) + TEMP_STACK_SIZE;
+        tids[i] = kthread_create(run4, stacks[i]);
     }
     waitFlag = 0;
     for(int i = 0;i < threadsNum;i++){
-        printf(1,"trying to join thread %d\n",tids[i]);
         int result = kthread_join(tids[i]);
         if(result == 0){
             printf(1,"OK - join thread %d\n",tids[i]);
@@ -291,19 +295,19 @@ int res;
  {
  	int funcInput = kthread_mutex_lock(mutexId);
  	if(funcInput<0){
- 		printf(1,"ERROR: thread mutex didnt lock!");
+ 		printf(1,"ERROR: thread mutex didnt lock!\n");
         res = 0;
      }
  	printf(1,"thread %d running func\n",kthread_id());
  	isThreadRunning=1;
 	funcInput = kthread_mutex_unlock(mutexId);
  	if(funcInput<0){
-        printf(1,"ERROR: thread mutex didnt unlock!");
+        printf(1,"ERROR: thread mutex didnt unlock!\n");
         res = 0;
      }
     	
  	kthread_exit();
- 	printf(1,"ERROR: returned from exit !!");
+ 	printf(1,"ERROR: returned from exit !!\n");
     res = 0;
  }
 
@@ -320,7 +324,7 @@ int res;
  	for(int i = 0; i<20; i++){
  		isThreadRunning=0;
  		funcInput = kthread_mutex_lock(mutexId);
- 		char* stack =  ((char *) malloc(MAX_STACK_SIZE * sizeof(char))) + MAX_STACK_SIZE;
+ 		char* stack =  ((char *) malloc(TEMP_STACK_SIZE * sizeof(char))) + TEMP_STACK_SIZE;
  		int tid = kthread_create ((void*)test_mutex3_helper, stack);
  		if(tid<0){
              printf(1,"ERROR: Thread wasnt created correctly %d\n",tid);
@@ -348,9 +352,9 @@ int res;
     }
 
  	if (res == 1){
-         printf(1, "Test passed!");
+         printf(1, "Test passed!\n");
     }else{
-        printf(1, "Test failed.. :(");
+        printf(1, "Test failed.. :(\n");
     }
     exit();
  }
@@ -534,7 +538,7 @@ main(int argc, char *argv[])
 	}
     int test_num = atoi(argv[1]);
     if(test_num == 1)
-        test_kthread1(6);
+        test_kthread1(10);
     if(test_num == 2)
         test_kthread2(10);
     if(test_num == 3)
@@ -542,19 +546,19 @@ main(int argc, char *argv[])
     if(test_num == 4)
         test_mutex1(5, run2);
     if(test_num == 5)
-        test_mutex1(2, run3);
+        test_mutex1(1, run3);
     if(test_num == 6)
-        test_mutex2(4);
-    if(test_num == 7)
-        test_tree1();
-    if(test_num == 8)
-        test_tree2();
-    if(test_num == 9)
-        test_tree3(run6, run7);
-    if(test_num == 10)
-        test_tree3(run6, run6);
-    if (test_num == 11)
+        test_mutex2(5);
+    if (test_num == 7)
         test_mutex3(3);
-
+    if(test_num == 8)
+        test_tree1();
+    if(test_num == 9)
+        test_tree2();
+    if(test_num == 10)
+        test_tree3(run6, run7);
+    if(test_num == 11)
+        test_tree3(run6, run6);
+    
     exit();
 }
