@@ -104,13 +104,11 @@ trap(struct trapframe *tf)
     }
   }
 
-
-  if(mythread() && mythread()->exitRequest && (tf->cs&3) == DPL_USER)
-    kthread_exit();
-
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running
   // until it gets to the regular system call return.)
+  if(mythread() && mythread()->exitRequest && (tf->cs&3) == DPL_USER)
+    kthread_exit();
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
     exit();
 
@@ -125,6 +123,4 @@ trap(struct trapframe *tf)
     kthread_exit();
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
     exit();
-
-
 }

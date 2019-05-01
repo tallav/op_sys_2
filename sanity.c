@@ -10,8 +10,6 @@
 #include "tournament_tree.h"
 #include "kthread.h"
 
-
-
 // power calculation
 int findPower(int base, int power) {
    if (power == 0)
@@ -19,7 +17,6 @@ int findPower(int base, int power) {
    else
       return (base * findPower(base, power-1));
 }  
-
 
 // thread code in test_kthread1 and test_kthread2
 void run1(){ 
@@ -34,15 +31,18 @@ void run1(){
 void test_kthread1(int threadsNum){
     void* stacks[threadsNum];
     for(int i = 0; i < threadsNum; i++){
-        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
-        stacks[i] = stack;
-        kthread_create(run1, stack);
+        stacks[i] = ((char*) malloc(500*sizeof(char))) + 500;
+        kthread_create(run1, stacks[i]);
+        sleep(10);
     }
+
     sleep(2000);
+    
     for(int i = 0; i < threadsNum; i++){
         free(stacks[i]);
         stacks[i] = 0;
     }
+    
     exit();
 }
 
@@ -55,6 +55,7 @@ void test_kthread2(int threadsNum){
         void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
         stacks[i] = stack;
         tids[i] = kthread_create(run1, stack);
+        sleep(10);
     }
 
     for(int i = 0;i < threadsNum;i++){
@@ -66,8 +67,9 @@ void test_kthread2(int threadsNum){
             printf(1,"Error - join thread %d\n",tids[i]);
         }
     }
-
+    sleep(1000);
     for(int i = 0;i < threadsNum;i++){
+        printf(1,"trying to join thread %d\n",tids[i]);
         int result = kthread_join(tids[i]);
         if(result == 0){
             printf(1,"Error - join thread %d\n",tids[i]);
@@ -99,13 +101,15 @@ void test_kthread3(int threadsNum){
         void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
         stacks[i] = stack;
         tids[i] = kthread_create(run5, stacks[i]);
-        if(tids[i] > 0){
-            printf(1,"create thread %d succeed\n",i+2);
-        }else{
+        if(tids[i] < 0){
             printf(1,"create thread %d failed\n",i+2);
+        }else{
+            printf(1,"create thread %d succeed\n",i+2);
         }
     }
+    sleep(1000);
     for(int i = 0;i < threadsNum-1;i++){
+        printf(1,"trying to join thread %d\n",tids[i]);
         int result = kthread_join(tids[i]);
         if(result == 0){
             printf(1,"OK - join thread %d\n",tids[i]);
@@ -530,7 +534,7 @@ main(int argc, char *argv[])
 	}
     int test_num = atoi(argv[1]);
     if(test_num == 1)
-        test_kthread1(10);
+        test_kthread1(6);
     if(test_num == 2)
         test_kthread2(10);
     if(test_num == 3)
