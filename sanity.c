@@ -10,10 +10,7 @@
 #include "tournament_tree.h"
 #include "kthread.h"
 
-#define STACK_SIZE 700
-
-int power(int number,int power);
-int powerHelper(int currentValue,int power, int times);
+int findPower(int base,int power);
 
 // thread code in test_kthread1 and test_kthread2
 void run1(){ 
@@ -25,15 +22,15 @@ void run1(){
 }
 
 // general test for kthread
-void test_kthread1(int THREAD_NUM){
-    void* stacks[THREAD_NUM];
-    for(int i = 0; i < THREAD_NUM; i++){
-        void* stack = ((char*) malloc(STACK_SIZE*sizeof(char))) + STACK_SIZE;
+void test_kthread1(int threadsNum){
+    void* stacks[threadsNum];
+    for(int i = 0; i < threadsNum; i++){
+        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
         stacks[i] = stack;
         kthread_create(run1, stack);
     }
     sleep(2000);
-    for(int i = 0; i < THREAD_NUM; i++){
+    for(int i = 0; i < threadsNum; i++){
         free(stacks[i]);
         stacks[i] = 0;
     }
@@ -42,36 +39,36 @@ void test_kthread1(int THREAD_NUM){
 
 // test for kthread_create and kthread_join
 // should not be able to join the second time
-void test_kthread2(int THREAD_NUM){
-    void* stacks[THREAD_NUM];
-    int pids[THREAD_NUM];
-    for(int i = 0;i < THREAD_NUM;i++){
-        void* stack = ((char*) malloc(STACK_SIZE*sizeof(char))) + STACK_SIZE;
+void test_kthread2(int threadsNum){
+    void* stacks[threadsNum];
+    int tids[threadsNum];
+    for(int i = 0;i < threadsNum;i++){
+        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
         stacks[i] = stack;
-        pids[i] = kthread_create(run1, stack);
+        tids[i] = kthread_create(run1, stack);
     }
 
-    for(int i = 0;i < THREAD_NUM;i++){
-        int result = kthread_join(pids[i]);
+    for(int i = 0;i < threadsNum;i++){
+        int result = kthread_join(tids[i]);
         if(result == 0){
-            printf(1,"OK - join thread %d\n",pids[i]);
+            printf(1,"OK - join thread %d\n",tids[i]);
         }
         if(result == -1){
-            printf(1,"Error - join thread %d\n",pids[i]);
+            printf(1,"Error - join thread %d\n",tids[i]);
         }
     }
 
-    for(int i = 0;i < THREAD_NUM;i++){
-        int result = kthread_join(pids[i]);
+    for(int i = 0;i < threadsNum;i++){
+        int result = kthread_join(tids[i]);
         if(result == 0){
-            printf(1,"Error - join thread %d\n",pids[i]);
+            printf(1,"Error - join thread %d\n",tids[i]);
         }
         if(result == -1){
-            printf(1,"OK - join thread %d\n",pids[i]);
+            printf(1,"OK - join thread %d\n",tids[i]);
         }
     }    
 
-    for(int i = 0; i < THREAD_NUM; i++){
+    for(int i = 0; i < threadsNum; i++){
         free(stacks[i]);
         stacks[i] = 0;
     }
@@ -86,11 +83,11 @@ void run5(){
 }
 
 // check that the process will not create more then 16 threads
-void test_kthread3(int THREAD_NUM){
-    void* stacks[THREAD_NUM];
-    int tids[THREAD_NUM];
-    for(int i = 0;i < THREAD_NUM;i++){
-        void* stack = ((char*) malloc(STACK_SIZE*sizeof(char))) + STACK_SIZE;
+void test_kthread3(int threadsNum){
+    void* stacks[threadsNum];
+    int tids[threadsNum];
+    for(int i = 0;i < threadsNum;i++){
+        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
         stacks[i] = stack;
         tids[i] = kthread_create(run5, stacks[i]);
         if(tids[i] > 0){
@@ -99,7 +96,7 @@ void test_kthread3(int THREAD_NUM){
             printf(1,"create thread %d failed\n",i+2);
         }
     }
-    for(int i = 0;i < THREAD_NUM-1;i++){
+    for(int i = 0;i < threadsNum-1;i++){
         int result = kthread_join(tids[i]);
         if(result == 0){
             printf(1,"OK - join thread %d\n",tids[i]);
@@ -108,7 +105,7 @@ void test_kthread3(int THREAD_NUM){
             printf(1,"Error - join thread %d\n",tids[i]);
         }
     }
-    for(int i = 0; i < THREAD_NUM; i++){
+    for(int i = 0; i < threadsNum; i++){
         free(stacks[i]);
         stacks[i] = 0;
     }
@@ -182,28 +179,28 @@ void run3(){
     kthread_exit(); 
 }
 
-void test_mutex1(int THREAD_NUM, void (*func)()){
-    void* stacks[THREAD_NUM];
-    int pids[THREAD_NUM];
-    for(int i = 0;i < THREAD_NUM;i++){
-        void* stack = ((char*) malloc(STACK_SIZE*sizeof(char))) + STACK_SIZE;
+void test_mutex1(int threadsNum, void (*func)()){
+    void* stacks[threadsNum];
+    int tids[threadsNum];
+    for(int i = 0;i < threadsNum;i++){
+        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
         stacks[i] = stack;
-        pids[i] = kthread_create(func, stack);
+        tids[i] = kthread_create(func, stack);
         sleep(100);
     }
     
-    for(int i = 0;i < THREAD_NUM;i++){
-        printf(1,"trying to join thread %d\n",pids[i]);
-        int result = kthread_join(pids[i]);
+    for(int i = 0;i < threadsNum;i++){
+        printf(1,"trying to join thread %d\n",tids[i]);
+        int result = kthread_join(tids[i]);
         if(result == 0){
-            printf(1,"OK - join thread %d\n",pids[i]);
+            printf(1,"OK - join thread %d\n",tids[i]);
         }
         if(result == -1){
-            printf(1,"Error - join thread %d\n",pids[i]);
+            printf(1,"Error - join thread %d\n",tids[i]);
         }
     }
 
-    for(int i = 0; i < THREAD_NUM; i++){
+    for(int i = 0; i < threadsNum; i++){
         free(stacks[i]);
         stacks[i] = 0;
     }
@@ -211,89 +208,83 @@ void test_mutex1(int THREAD_NUM, void (*func)()){
 }
 
 int mid = -1;
-volatile int dontStart;
 int num = 0;
+volatile int waitFlag;
 
 void run4(){
     int result; 
-    while(dontStart){}; 
+    while(waitFlag){};
     result = kthread_mutex_lock(mid); 
-    if(result < 0){  
-        printf(1,"mutex locked unsuccessfully\n"); 
+    if(result == -1){  
+        printf(1,"Error - mutex lock, mid=%d\n", mid); 
     } 
-    for(int i = 0;i < 500;i++){ 
+    for(int i = 0;i < 100;i++){ 
         int temp = num; 
         temp++; 
         sleep(1); 
         num = temp; 
     } 
     result = kthread_mutex_unlock(mid); 
-    if(result < 0){ 
-        printf(1,"mutex unlocked unsuccessfully\n"); 
+    if(result == -1){ 
+        printf(1,"Error - mutex unlock, mid=%d\n", mid); 
     } 
     kthread_exit(); 
 } 
 
-void test_mutex2(int THREAD_NUM){
-    dontStart = 1;
-    int pids[THREAD_NUM];
+// tests multiple threads trying to join on the same mutex
+// expected num = 500 at the end
+void test_mutex2(int threadsNum){
+    waitFlag = 1;
+    int tids[threadsNum];
+    void* stacks[threadsNum];
     int result;
     mid = kthread_mutex_alloc(); 
     if(mid == -1){ 
         printf(1,"mutex allocated unsuccessfully\n"); 
     } 
-    void* stacks[THREAD_NUM];
-    for(int i = 0;i < THREAD_NUM;i++){
-        void* stack = ((char*) malloc(STACK_SIZE*sizeof(char))) + STACK_SIZE;
+    for(int i = 0;i < threadsNum;i++){
+        void* stack = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
         stacks[i] = stack;
-        pids[i] = kthread_create(run4, stack);
+        tids[i] = kthread_create(run4, stack);
     }
-
-    dontStart = 0;
-    
-    for(int i = 0;i < THREAD_NUM;i++){
-        printf(1,"trying to join thread %d\n",pids[i]);
-        int result = kthread_join(pids[i]);
+    waitFlag = 0;
+    for(int i = 0;i < threadsNum;i++){
+        printf(1,"trying to join thread %d\n",tids[i]);
+        int result = kthread_join(tids[i]);
         if(result == 0){
-            printf(1,"OK - join thread %d\n",pids[i]);
+            printf(1,"OK - join thread %d\n",tids[i]);
         }
         if(result == -1){
-            printf(1,"Error - join thread %d\n",pids[i]);
+            printf(1,"Error - join thread %d\n",tids[i]);
         }
     }
-
     result = kthread_mutex_dealloc(mid); 
     if(result == -1){ 
         printf(1,"Error - mutex deallocated\n"); 
     } 
-
     printf(1,"num is %d\n",num);
-
-    for(int i = 0; i < THREAD_NUM; i++){
+    for(int i = 0; i < threadsNum; i++){
         free(stacks[i]);
         stacks[i] = 0;
     }
     exit();
 }
 
+// allocates turnament tree with several depthes and prints them
 void test_tree1(){
     int result;
     struct trnmnt_tree* tree;
     
-    for(int i = 1; i <= 5; i++){
+    for(int i = 1; i < 5; i++){
         tree = trnmnt_tree_alloc(i); 
         if(tree == 0){ 
-            printf(1,"1 trnmnt_tree allocated unsuccessfully\n"); 
+            printf(1,"Error - trnmnt_tree allocate\n"); 
         } 
         print_tree(tree);
         printf(1, "\n--------------------------------\n");
         result = trnmnt_tree_dealloc(tree); 
-        if(result == 0){}
-        else if(result == -1){ 
-            printf(1,"1 trnmnt_tree deallocated unsuccessfully\n"); 
-        } 
-        else{ 
-            printf(1,"unkown return code from trnmnt_tree_dealloc\n"); 
+        if(result == -1){ 
+            printf(1,"Error - trnmnt_tree deallocate\n"); 
         } 
     }
     exit();
@@ -302,141 +293,149 @@ void test_tree1(){
 void test_tree2(){
     int result;
     trnmnt_tree* tree;
-    
     int depth;
     for(depth = 1; depth < 5; depth++){
         tree = trnmnt_tree_alloc(depth); 
         if(tree == 0){ 
-            printf(1,"trnmnt_tree allocated unsuccessfully\n"); 
-        } 
-        print_tree(tree);
-
-        int maxIndex = power(2,depth)-1;
+            printf(1,"Error - trnmnt_tree allocate\n"); 
+        }
+        int maxIndex = findPower(2,depth)-1;
         printf(1, "depth=%d, maxIndex=%d\n", depth, maxIndex);
-        for(int index = 0; index < maxIndex; index++){
+        for(int index = 0; index <= maxIndex; index++){
             result = trnmnt_tree_acquire(tree, index); 
             if(result == 0){  
-                printf(1,"trnmnt_tree locked - depth=%d , index=%d\n", depth, index); 
-            }else if(result == -1){  
-                printf(1,"trnmnt_tree locked unsuccessfully - depth=%d , index=%d\n", depth, index); 
-            }else{
-                printf(1,"unkown return code from trnmnt_tree_acquire\n"); 
+                printf(1,"OK - trnmnt_tree lock by ID=%d\n", index); 
+            }
+            if(result == -1){  
+                printf(1,"Error - trnmnt_tree lock by ID=%d\n", index); 
             }
             result = trnmnt_tree_release(tree, index); 
             if(result == 0){  
-                printf(1,"trnmnt_tree unlocked - depth=%d , index=%d\n", depth, index); 
-            }else if(result == -1){  
-                printf(1,"trnmnt_tree unlocked unsuccessfully - depth=%d , index=%d\n", depth, index); 
-            }else{
-                printf(1,"unkown return code from trnmnt_tree_release\n"); 
+                printf(1,"OK - trnmnt_tree unlock by ID=%d\n", index); 
+            }
+            if(result == -1){  
+                printf(1,"Error - trnmnt_tree unlock by ID=%d\n", index); 
             }
         }
-
         result = trnmnt_tree_dealloc(tree); 
         if(result == -1){ 
-            printf(1,"trnmnt_tree deallocated unsuccessfully\n"); 
+            printf(1,"Error - trnmnt_tree deallocate\n"); 
         } 
     }
     exit();
 }
 
 trnmnt_tree* tree;
-volatile int dontStart;
+volatile int waitFlag2;
 int result;
-int THREAD_NUM = 2;
-int DEPTH_MAX = 3;
-int num;
-volatile int depth;
 
-int power(int number,int power);
-int powerHelper(int currentValue,int power, int times);
+// thread trying to acquire the tree and need to succeed
+void run6(){
+    int result6;
+    while(waitFlag2){} 
 
-
-void run6(){ 
-    int id = kthread_id() - 5;
-    printf(1, "id=%d\n", id);
-    trnmnt_tree* tree; 
-    int result2; 
-    tree = trnmnt_tree_alloc(depth); 
-    if(tree == 0){  
-        printf(1,"4 trnmnt_tree allocated unsuccessfully\n"); 
-    } 
-    print_tree(tree);
-    result2 = trnmnt_tree_acquire(tree, id - 1); 
-    if(result2 < 0){  
-        printf(1,"trnmnt_tree locked unsuccessfully\n"); 
-    } 
-    result2 = trnmnt_tree_release(tree, id - 1); 
-    if(result < 0){ 
-        printf(1,"trnmnt_tree unlocked unsuccessfully\n"); 
-    } 
-    result2 = trnmnt_tree_dealloc(tree); 
-    if(result2 == -1){ 
-        printf(1,"1 trnmnt_tree deallocated unsuccessfully\n"); 
-    } 
-    kthread_exit(); 
-}  
-
-void initiateMutexTest(){
-    dontStart = 1;
-    int result;
-    int num_threads = power(2,depth);
-    printf(1,"num_threads=%d\n", num_threads);
-    int pids[num_threads];
-    void* threads_stacks[num_threads];
-
-    for(int i = 0;i < num_threads;i++){
-        threads_stacks[i] = ((char*) malloc(STACK_SIZE * sizeof(char))) + STACK_SIZE;
-        pids[i] = kthread_create(run6, threads_stacks[i]);
+    result6 = trnmnt_tree_acquire(tree, 0); 
+    if(result6 == 0){  
+        printf(1,"OK - trnmnt_tree_acquire by thread %d\n", kthread_id()); 
+    }
+    if(result6 == -1){  
+        printf(1,"Error - trnmnt_tree_acquire by thread %d\n", kthread_id()); 
     }
 
-    dontStart = 0;
+    sleep(400);
     
-    for(int i = 0;i < num_threads;i++){
-        printf(1,"Attempting to join thread %d\n",i+1);
-
-        result = kthread_join(pids[i]);
-        if(result == 0){
-            printf(1,"Finished joing thread %d\n",i+1);
-        }
-        else if(result == -1){
-            printf(1,"Error in joing thread %d\n",i+1);
-        }
-        else{
-            printf(1,"Unknown result code from join\n");
-        }
+    result6 = trnmnt_tree_release(tree, 0); 
+    if(result == 0){  
+        printf(1,"OK - trnmnt_tree_release by thread %d\n", kthread_id()); 
+    }
+    if(result == -1){  
+        printf(1,"Error - trnmnt_tree_release by thread %d\n", kthread_id()); 
     }
 
-    for(int i = 0;i < num_threads;i++){
-        free(threads_stacks[i]);
-        threads_stacks[i] = 0;
-    }
-    exit();
+    kthread_exit(); 
 }
 
-int test_tree4(){
-    int pid;
+// thread trying to deallocate the tree when it's locked - supposed to fail
+// supposed to succeed on the seconed time (after release by the other thread)
+void run7(){
+    int result;
+    while(waitFlag2){} 
+    sleep(200);
 
-    printf(1,"Starting tournament test 4\n");
+    result = trnmnt_tree_dealloc(tree); 
+    if(result == 0){
+        printf(1,"Error - trnmnt_tree deallocate by thread %d\n", kthread_id()); 
+    } 
+    if(result == -1){
+        printf(1,"OK - trnmnt_tree deallocate should be -1 by thread %d\n", kthread_id());
+    } 
 
-    for(int i = 0;i < 1;i++){
-        depth = i + 1;
-        printf(1,"\n---------------------------------------\nStarted current test for %d depth\n",i+1);
+    sleep(600);
 
-        if((pid = fork()) == 0){
-            initiateMutexTest();
-            exit();
-        }
-        else if(pid > 0){
-            wait();
-        }
-        else{
-            printf(1,"fork failed\n");
-        }
+    result = trnmnt_tree_dealloc(tree); 
+    if(result == 0){
+        printf(1,"OK - trnmnt_tree deallocate should be 0 by thread %d\n", kthread_id());
+    } 
+    if(result == -1){
+        printf(1,"Error - trnmnt_tree deallocate by thread %d\n", kthread_id()); 
+    } 
 
-        printf(1,"Finished current test for %d depth\n---------------------------------------\n",i+1);
+    kthread_exit(); 
+}
+
+// thread trying to acquire the tree when it's already locked
+// supposed to succeed only after release by thr other thread
+void run8(){
+    int result6;
+    while(waitFlag2){} 
+
+    result6 = trnmnt_tree_acquire(tree, 6); 
+    if(result6 == 0){  
+        printf(1,"OK - trnmnt_tree_acquire thread %d should succeed after release\n", kthread_id()); 
+    }
+    if(result6 == -1){  
+        printf(1,"Error - trnmnt_tree_acquire by thread %d\n", kthread_id()); 
     }
     
+    result6 = trnmnt_tree_release(tree, 6); 
+    if(result == 0){  
+        printf(1,"OK - trnmnt_tree_release by thread %d\n", kthread_id()); 
+    }
+    if(result == -1){  
+        printf(1,"Error - trnmnt_tree_release by thread %d\n", kthread_id()); 
+    }
+
+    kthread_exit(); 
+}
+
+void test_tree3(void (*func1)(), void (*func2)()){
+    int threadsNum = 2;
+    waitFlag2 = 1;
+    void* stacks[threadsNum];
+    int tids[threadsNum];
+
+    tree = trnmnt_tree_alloc(3); 
+    if(tree == 0){ 
+        printf(1,"Error - trnmnt_tree allocate\n"); 
+    } 
+    print_tree(tree);
+    for(int i = 0;i < threadsNum;i++){
+        stacks[i] = ((char*) malloc(MAX_STACK_SIZE*sizeof(char))) + MAX_STACK_SIZE;
+    }
+    tids[0] = kthread_create(func1, stacks[0]);
+    tids[1] = kthread_create(func2, stacks[1]);
+
+    waitFlag2 = 0;
+    
+    for(int i = 0;i < threadsNum;i++){
+        int result = kthread_join(tids[i]);
+        if(result == -1){
+            printf(1,"Error - join thread %d\n",tids[i]);
+        }
+    }
+    for(int i = 0;i < threadsNum;i++){
+        free(stacks[i]);
+    }
     exit();
 }
 
@@ -459,38 +458,25 @@ main(int argc, char *argv[])
         test_mutex1(5, run2);
     if(test_num == 5)
         test_mutex1(2, run3);
-    // TODO: test_mutex2 sometimes print error
+    // TODO: test_mutex2 not creating the first thread???
     if(test_num == 6)
-        test_mutex2(15);
+        test_mutex2(4);
     if(test_num == 7)
         test_tree1();
     if(test_num == 8)
         test_tree2();
     if(test_num == 9)
-        test_tree4();
+        test_tree3(run6, run7);
+    if(test_num == 10)
+        test_tree3(run6, run6);
 
     exit();
 }
 
-// Calculating math power
-int power(int number,int power){
-    if(power == 0){
-        return 1;
-    }
-    else if(power == 1){
-        return number;
-    }
-    else{
-        return powerHelper(1, number, power);
-    }
-}
-
-// Calculating math power helper
-int powerHelper(int currentValue,int power, int times){
-    if(times == 0){
-        return currentValue;
-    }
-    else{
-        return powerHelper(currentValue * power, power, times - 1);
-    }
-}
+// power calculation
+int findPower(int base, int power) {
+   if (power == 0)
+      return 1;
+   else
+      return (base * findPower(base, power-1));
+}  

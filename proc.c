@@ -184,7 +184,6 @@ userinit(void)
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
   inituvm(p->pgdir, _binary_initcode_start, (int)_binary_initcode_size);
-  // TODO: lock on sz
   p->sz = PGSIZE;
   t = p->threads;
   memset(t->tf, 0, sizeof(*t->tf));
@@ -218,7 +217,6 @@ growproc(int n)
 {
   uint sz;
   struct proc *curproc = myproc();
-  // TODO: lock the ptable or create new lock  
   acquire(&ptable.lock);
   sz = curproc->sz;
   if(n > 0){
@@ -267,7 +265,6 @@ fork(void)
     nt->state = UNINIT;
     return -1;
   }
-  // TODO: lock on pgdir and sz
   np->sz = curproc->sz;
   np->parent = curproc;
   *nt->tf = *curthread->tf;
@@ -455,10 +452,7 @@ scheduler(void)
         if(t->state != RUNNABLE){
             continue;
         }
-        /*
-        if(p && t)
-          cprintf("scheduler found runnable: process=%d, thread=%d\n", p->pid, t->tid);
-        */
+        
         // Switch to chosen process.  It is the process's job
         // to release ptable.lock and then reacquire it
         // before jumping back to us.
@@ -498,10 +492,8 @@ sched(void)
     panic("sched ptable.lock");
   if(mycpu()->ncli != 1)
     panic("sched locks");
-  if(t->state == RUNNING){
-    cprintf("sched thread=%d\n", t->tid);
+  if(t->state == RUNNING)
     panic("sched running");
-  }
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = mycpu()->intena;
@@ -619,7 +611,7 @@ wakeup(void *chan)
 int
 kill(int pid)
 {
-  cprintf("entered kill: process=%p, thread=%p\n", myproc(), mythread());
+  //cprintf("entered kill: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *p;
 
   acquire(&ptable.lock);

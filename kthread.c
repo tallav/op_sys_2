@@ -101,10 +101,8 @@ void kthread_exit(){
         exit();
     }
     
-    //release(&ptable.lock);
     wakeupThreads(curthread);
     //cprintf("wake up threads sleeping on thread %d\n", curthread->tid);
-    //acquire(&ptable.lock);
 
     // Jump into the scheduler, never to return.
     curthread->state = TERMINATED;
