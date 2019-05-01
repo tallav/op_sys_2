@@ -1,0 +1,76 @@
+$ curthread 3  add: 80116f34
+Creating thread 1
+Created thread 1 successfully
+Creating thread 2
+Created thread 2 successfully
+Creating thread 3
+Created thread 3 successfully
+Creating thread 4
+Created thread 4 successfully
+Creating thread 5
+Created thread 5 successfully
+Creating thread 6
+Created thread 6 successfully
+Creating thread 7
+Created thread 7 successfully
+Creating thread 8
+Created thread 8 successfully
+Creating thread 9
+Created thread 9 successfully
+Creating thread 10
+Created thread 10 successfully
+Creating thread 11
+Created thread 11 successfully
+Creating thread 12
+Created thread 12 successfully
+Creating thread 13
+Created thread 13 successfully
+Creating thread 14
+Created thread 14 successfully
+Creating thread 15
+Created thread 15 successfully
+curthread 5  add: 80117198
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 6  add: 801171bc
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 7  add: 801171e0
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 8  add: 80117204
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 12  add: 80117294
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 15  add: 80117300
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 16  add: 80117324
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 17  add: 80117348
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 18  add: 8011736c
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 19  add: 80117390
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 10  add: 8011724c
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 14  add: 801172dc
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 13  add: 801172b8
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 11  add: 80117270
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004 
+curthread 9  add: 80117228
+thread 4 didn't terminate, state: 1, chan: 80120300
+cur proc 80115004

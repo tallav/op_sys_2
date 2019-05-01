@@ -172,16 +172,6 @@ Finished joing thread 9
 thread 10 entering
 thread 10 exiting
 Finished joing thread 10
-Thread 1 isn't my thread anymore, as it should be
-Thread 2 isn't my thread anymore, as it should be
-Thread 3 isn't my thread anymore, as it should be
-Thread 4 isn't my thread anymore, as it should be
-Thread 5 isn't my thread anymore, as it should be
-Thread 6 isn't my thread anymore, as it should be
-Thread 7 isn't my thread anymore, as it should be
-Thread 8 isn't my thread anymore, as it should be
-Thread 9 isn't my thread anymore, as it should be
-Thread 10 isn't my thread anymore, as it should be
 $ $ Finished Yehonatan Peleg Test, quiting...
 )V0G0N";
     vector<string> test_4_UserPrograms = {"quitXV6","kt_sys3","sleep"};
@@ -1759,7 +1749,7 @@ $ $ Finished Yehonatan Peleg Test, quiting...
     vector<string> test_8_UserPrograms = {"quitXV6","kt_sys7","cThreW16T"};
     string test_8_Hint = "Problem with exit when other threads are alive and running, exiting dosen't leave the system in "
                          "consistent state.";
-    int test_8_time_limit = 420000;
+    int test_8_time_limit = 1800000;
 
     string test_9_Input = R"V0G0N(
 kt_sys8

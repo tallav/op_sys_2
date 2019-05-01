@@ -164,3 +164,35 @@ wakeupThreads(void *chan)
     }
   }
 }
+
+
+void
+waitForRunnableThreads(){
+  struct proc *curproc = myproc();
+  struct kthread *curthread = mythread();
+ // cprintf("wait for runnable threads");
+  if(curthread->exitRequest == 0){
+    acquire(&ptable.lock);
+    struct kthread *t;
+    int allTerminated = 0;
+  //  cprintf("exit request, all terminated: %d \n",allTerminated);
+    //cprintf("curthread %d  add: %p\n", curthread->tid,curthread);
+    while (!allTerminated){
+      allTerminated = 1;
+       for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
+         if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
+      //       cprintf("thread %d didn't terminate, state: %d, chan: %p\n", t->tid, t->state,t->chan);
+            allTerminated = 0;
+           break;
+         }
+       }
+       if (allTerminated)
+          break;
+       //cprintf("cur proc %p \n", curproc);
+       wakeupThreads(curproc);
+       //cprintf("go to sleep");
+       sleep(curthread, &ptable.lock);
+    }
+    release(&ptable.lock);
+  }
+}

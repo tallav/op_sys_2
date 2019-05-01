@@ -169,8 +169,8 @@ mkfs: mkfs.c fs.h
 
 UPROGS=\
 	_quitXV6\
-	_kt_sys7\
-	_cThreW16T\
+	_kt_sys10\
+	_allBut1\
 	_sh\
 	_init\
 	_ls\
@@ -285,17 +285,17 @@ _quitXV6: $(ULIB)
 	objdump -S _quitXV6 > quitXV6.asm
 	$(OBJDUMP) -t _quitXV6 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > quitXV6.sym
 
-_kt_sys7: $(ULIB)
-	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o kt_sys7.o ./Project_Test/XV6_Tests/kt_sys7.c
-	ld -m elf_i386 -N -e main -Ttext 0 -o _kt_sys7 kt_sys7.o $(ULIB)
-	objdump -S _kt_sys7 > kt_sys7.asm
-	$(OBJDUMP) -t _kt_sys7 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kt_sys7.sym
+_kt_sys10: $(ULIB)
+	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o kt_sys10.o ./Project_Test/XV6_Tests/kt_sys10.c
+	ld -m elf_i386 -N -e main -Ttext 0 -o _kt_sys10 kt_sys10.o $(ULIB)
+	objdump -S _kt_sys10 > kt_sys10.asm
+	$(OBJDUMP) -t _kt_sys10 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > kt_sys10.sym
 
-_cThreW16T: $(ULIB)
-	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o cThreW16T.o ./Project_Test/XV6_Tests/cThreW16T.c
-	ld -m elf_i386 -N -e main -Ttext 0 -o _cThreW16T cThreW16T.o $(ULIB)
-	objdump -S _cThreW16T > cThreW16T.asm
-	$(OBJDUMP) -t _cThreW16T | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > cThreW16T.sym
+_allBut1: $(ULIB)
+	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o allBut1.o ./Project_Test/XV6_Tests/allBut1.c
+	ld -m elf_i386 -N -e main -Ttext 0 -o _allBut1 allBut1.o $(ULIB)
+	objdump -S _allBut1 > allBut1.asm
+	$(OBJDUMP) -t _allBut1 | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > allBut1.sym
 
 _sh: $(ULIB)
 	gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -c -o sh.o sh.c

@@ -234,6 +234,79 @@ void test_mutex2(int THREAD_NUM){
     exit();
 }
 
+int mutexId;
+int isThreadRunning;
+int res;
+
+ void test_mutex3_helper()
+ {
+ 	int funcInput = kthread_mutex_lock(mutexId);
+ 	if(funcInput<0){
+ 		printf(1,"ERROR: thread mutex didnt lock!");
+        res = 0;
+     }
+ 	printf(1,"thread %d running func\n",kthread_id());
+ 	isThreadRunning=1;
+	funcInput = kthread_mutex_unlock(mutexId);
+ 	if(funcInput<0){
+        printf(1,"ERROR: thread mutex didnt unlock!");
+        res = 0;
+     }
+    	
+ 	kthread_exit();
+ 	printf(1,"ERROR: returned from exit !!");
+    res = 0;
+ }
+
+// Test threads behavior while using mutexes, and also mutex functions.
+ void test_mutex3()
+ {
+    int res = 1;
+ 	int funcInput;
+ 	mutexId = kthread_mutex_alloc();
+ 	if(mutexId<0){
+         printf(1,"ERROR: mutex %d didnt alloc! \n",mutexId);
+         res = 0;
+     }
+ 	for(int i = 0; i<20; i++){
+ 		isThreadRunning=0;
+ 		funcInput = kthread_mutex_lock(mutexId);
+ 		char* stack =  ((char *) malloc(STACK_SIZE * sizeof(char))) + STACK_SIZE;
+ 		int tid = kthread_create ((void*)test_mutex3_helper, stack);
+ 		if(tid<0){
+             printf(1,"ERROR: Thread wasnt created correctly %d\n",tid);
+             res = 0;
+         }
+ 		if(isThreadRunning){
+             printf(1,"ERROR: mutex didnt prevent writing!\n");
+             res =0;
+        }
+ 		funcInput = kthread_mutex_unlock(mutexId);
+ 		if(funcInput<0){
+            printf(1,"ERROR: mutex didnt unlock!\n");
+            res = 0;
+         }
+ 		kthread_join(tid);
+ 		if(!isThreadRunning){
+              printf(1,"ERROR: thread didnt run!\n");
+              res = 0;
+         }
+ 	}
+ 	funcInput = kthread_mutex_dealloc(mutexId);
+ 	if(funcInput<0){
+        printf(1,"ERROR: mutex didnt dealloc!\n");
+        res = 0;
+    }
+
+ 	if (res == 1){
+         printf(1, "Test passed!");
+    }else{
+        printf(1, "Test failed.. :(");
+    }
+    exit();
+ }
+
+
 void test_tree1(){
     int result;
     struct trnmnt_tree* tree;
@@ -277,6 +350,7 @@ main(int argc, char *argv[])
         test_mutex2(15);
     if(test_num == 6)
         test_tree1();
-    
+    if (test_num == 7)
+        test_mutex3(3);
     exit();
 }

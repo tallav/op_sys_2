@@ -9,14 +9,14 @@
 #include "../../memlayout.h"
 
 #define NUM_PROC 61
-#define STACK_SIZE 500
+#define STACK_SIZE 4000
 
 int execute(char * command, char** args);
 void createProcess();
 
 int main(int argc, char *argv[]){
     
-    for(int i = 0;i < 3;i++){
+    for(int i = 0;i < 10;i++){
         createProcess();
         sleep(1000);
     }

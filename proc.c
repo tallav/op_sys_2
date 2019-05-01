@@ -300,7 +300,7 @@ fork(void)
 void
 exit(void)
 {
-  //cprintf("entered exit: process=%d, thread=%d\n", myproc()->pid, mythread()->tid);
+ // cprintf("entered exit: process=%d, thread=%d\n", myproc()->pid, mythread()->tid);
   struct proc *curproc = myproc();
   struct kthread *curthread = mythread();
   struct proc *p;
@@ -317,12 +317,15 @@ exit(void)
   int lastRunning = 1;
   for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
       if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
+        //cprintf("thread : %d got exit request\n", t->tid);
           t->exitRequest = 1;
           lastRunning = 0;
       }
   }
 
   if(lastRunning){
+    //cprintf("last running");
+
     release(&ptable.lock);
     // Close all open files.
     for(fd = 0; fd < NOFILE; fd++){
@@ -356,6 +359,14 @@ exit(void)
     // Jump into the scheduler, never to return.
     curproc->state = ZOMBIE;
     curthread->state = TERMINATED;
+
+    // kfree(curthread->kstack);
+    // curthread->kstack = 0;
+    // curthread->tid = 0;
+    // curthread->tproc = 0;
+    // curthread->exitRequest = 0;
+    // curthread->state = UNINIT;
+
     sched();
     panic("zombie exit");
   }
@@ -387,8 +398,10 @@ wait(void)
         // check if the process threads are terminated
         int hasNonTerminated = 0;
         for(t = p->threads; t < &p->threads[NTHREAD]; t++){
+        //  cprintf("thread id: %d, thread state:%d \n", t->tid, t->state);
           // clean all the process threads
           if(t->state == TERMINATED){
+          //  cprintf("thread id: %d terminated \n", t->tid);
             kfree(t->kstack);
             t->kstack = 0;
             t->tid = 0;
@@ -416,7 +429,7 @@ wait(void)
     }
 
     // No point waiting if we don't have any children.
-    if(!havekids || curproc->killed){
+    if(!havekids || curproc->killed || mythread()->exitRequest){
       release(&ptable.lock);
       return -1;
     }
@@ -455,6 +468,7 @@ scheduler(void)
         if(t->state != RUNNABLE){
             continue;
         }
+        
         /*
         if(p && t)
           cprintf("scheduler found runnable: process=%d, thread=%d\n", p->pid, t->tid);
@@ -619,7 +633,7 @@ wakeup(void *chan)
 int
 kill(int pid)
 {
-  cprintf("entered kill: process=%p, thread=%p\n", myproc(), mythread());
+  //cprintf("entered kill: process=%p, thread=%p\n", myproc(), mythread());
   struct proc *p;
 
   acquire(&ptable.lock);

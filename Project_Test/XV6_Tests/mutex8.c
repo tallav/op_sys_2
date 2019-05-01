@@ -23,7 +23,8 @@ int result;
 void threadStart_1(){
     int result;
     while(dontStart){} 
-
+    sleep(40);
+    
     printf(1,"Thread 1 starting...\n");
     
     printf(1,"Thread 1 unlocking unlocked lock...\n");

@@ -33,8 +33,14 @@ exec(char *path, char **argv)
   struct proc *curproc = myproc();
   struct kthread *curthread = mythread();
 
+
+ // cprintf("exec cur thread %d \n",curthread->tid );
+  if (curthread->exitRequest == 0)
+    waitForRunnableThreads();
+
+
   // check if you got exit request before executing
-  if(curthread->exitRequest == 1){
+  /*if(curthread->exitRequest == 1){
     cprintf("exec: thread got exit request\n");
     kthread_exit();
     return -1;
@@ -47,7 +53,7 @@ exec(char *path, char **argv)
       }
     }
     release(&ptable.lock);
-  }
+  }*/
   /*
   acquire(&ptable.lock);
   struct kthread *t;
