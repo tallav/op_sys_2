@@ -43,7 +43,6 @@ exec(char *path, char **argv)
     for(t = curproc->threads; t < &curproc->threads[NTHREAD]; t++){
       if(t != curthread && t->state != TERMINATED && t->state != UNINIT){
         t->exitRequest = 1;
-        kthread_join(t->tid);
       }
     }
     release(&ptable.lock);
